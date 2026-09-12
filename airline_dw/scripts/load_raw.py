@@ -30,7 +30,8 @@ for table_name, file_name in tables.items():
         SELECT *
         FROM read_csv_auto(
             '{file_path.as_posix()}',
-            header = true
+            header = true,
+            all_varchar = true
         )
         """
     )
