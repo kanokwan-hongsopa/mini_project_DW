@@ -187,3 +187,5 @@ Attributes:
 ---
 
 ## 4. ER Diagram
+
+![OLTP ER Diagram](OLTP_ER_Diagram.png)
