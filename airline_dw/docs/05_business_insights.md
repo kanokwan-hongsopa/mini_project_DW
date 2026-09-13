@@ -1,219 +1,197 @@
-# 05 Business Insights
+# 05 การวิเคราะห์เชิงธุรกิจ (Business Insights)
 
-## Overview
+## ภาพรวม
 
-This document presents business insights derived from the Airline Data Warehouse.  
-The analysis primarily uses `fact_ticket_sales` together with related dimension tables, including `dim_date`, `dim_airport`, and `dim_fare_class`.
+เอกสารนี้นำเสนอผลการวิเคราะห์เชิงธุรกิจจาก Airline Data Warehouse โดยใช้ข้อมูลจาก `fact_ticket_sales` ร่วมกับ Dimension ที่เกี่ยวข้อง ได้แก่ `dim_date`, `dim_airport` และ `dim_fare_class`
 
-The analysis covers Business Questions 1–8, focusing on ticket sales, ticket flight volume, fare class performance, sales trends, airport activity, and popular routes.
+การวิเคราะห์ครอบคลุมคำถามทางธุรกิจข้อที่ 1–8 โดยมุ่งเน้นการวิเคราะห์ยอดขายตั๋ว จำนวน Ticket Flight ประสิทธิภาพของแต่ละ Fare Class แนวโน้มยอดขายตามช่วงเวลา กิจกรรมของสนามบิน และเส้นทางการบินที่ได้รับความนิยม
 
 ---
 
-## 1. What is the total ticket sales revenue?
+## 1. ยอดขายตั๋วรวมเป็นเท่าใด?
 
-### Business Question
-ยอดขายตั๋วรวมเป็นเท่าใด?
-
-### Data Used
+### ข้อมูลที่ใช้
 - Fact Table: `fact_ticket_sales`
 - Measure: `amount`
 
-### Result
-**Total Ticket Sales = 20,766,980,900**
+### ผลการวิเคราะห์
+**ยอดขายตั๋วรวม = 20,766,980,900**
 
 ### Business Insight
-The total ticket sales revenue in the dataset is **20,766,980,900**.  
-This value represents the overall revenue generated from all ticket-flight transactions recorded in the Data Warehouse.
+จากข้อมูลใน Data Warehouse พบว่ายอดขายตั๋วรวมทั้งหมดเท่ากับ **20,766,980,900**
+
+ค่านี้แสดงถึงยอดขายรวมที่เกิดจากรายการ Ticket Flight ทั้งหมดที่ถูกจัดเก็บอยู่ใน Data Warehouse
 
 ---
 
-## 2. How many Ticket Flights are there in total?
+## 2. จำนวน Ticket Flight ทั้งหมดเท่าใด?
 
-### Business Question
-จำนวน Ticket Flight ทั้งหมดเท่าใด?
-
-### Data Used
+### ข้อมูลที่ใช้
 - Fact Table: `fact_ticket_sales`
 - Measure: `ticket_flight_count`
 
-### Result
-**Total Ticket Flights = 1,045,726**
+### ผลการวิเคราะห์
+**จำนวน Ticket Flight ทั้งหมด = 1,045,726 รายการ**
 
 ### Business Insight
-There are **1,045,726 Ticket Flights** in the dataset.
+จากข้อมูลพบว่ามี Ticket Flight ทั้งหมด **1,045,726 รายการ**
 
-The grain of `fact_ticket_sales` is one Ticket × Flight segment per row. Therefore, the `ticket_flight_count` measure can be aggregated to determine the total number of ticket-flight transactions.
+โดย Grain ของ `fact_ticket_sales` กำหนดให้ 1 แถวแทน 1 Ticket × 1 Flight Segment ดังนั้นจึงสามารถรวมค่า `ticket_flight_count` เพื่อหาจำนวนรายการ Ticket Flight ทั้งหมดได้
 
 ---
 
-## 3. Which Fare Class generates the highest ticket sales?
+## 3. Fare Class ใดสร้างยอดขายสูงที่สุด?
 
-### Business Question
-Fare Class ใดสร้างยอดขายสูงที่สุด?
-
-### Data Used
+### ข้อมูลที่ใช้
 - Fact Table: `fact_ticket_sales`
 - Dimension: `dim_fare_class`
 - Measure: `amount`
 
-### Result
+### ผลการวิเคราะห์
 
-| Fare Class | Total Sales |
+| Fare Class | ยอดขายรวม |
 |---|---:|
 | Economy | 14,695,684,400 |
 | Business | 5,505,179,600 |
 | Comfort | 566,116,900 |
 
 ### Business Insight
-**Economy Class generates the highest ticket sales**, with total sales of **14,695,684,400**.
+**Economy Class สร้างยอดขายสูงที่สุด** โดยมียอดขายรวม **14,695,684,400**
 
-Although Economy tickets generally represent a lower service class than Business, their substantially higher transaction volume contributes to the largest overall sales value.
+ผลการวิเคราะห์แสดงให้เห็นว่า Economy เป็น Fare Class ที่มีบทบาทสำคัญต่อยอดขายรวม เนื่องจากมีจำนวน Ticket Flight สูงกว่ากลุ่มอื่นอย่างมาก
 
 ---
 
-## 4. Which Fare Class has the highest number of Ticket Flights?
+## 4. Fare Class ใดมีจำนวน Ticket Flight มากที่สุด?
 
-### Business Question
-Fare Class ใดมีจำนวนตั๋วมากที่สุด?
-
-### Data Used
+### ข้อมูลที่ใช้
 - Fact Table: `fact_ticket_sales`
 - Dimension: `dim_fare_class`
 - Measure: `ticket_flight_count`
 
-### Result
+### ผลการวิเคราะห์
 
-| Fare Class | Ticket Flights |
+| Fare Class | จำนวน Ticket Flight |
 |---|---:|
 | Economy | 920,793 |
 | Business | 107,642 |
 | Comfort | 17,291 |
 
 ### Business Insight
-**Economy Class has the highest number of Ticket Flights**, with **920,793 transactions**.
+**Economy Class มีจำนวน Ticket Flight มากที่สุด** โดยมีจำนวนทั้งหมด **920,793 รายการ**
 
-Economy therefore represents the dominant Fare Class in terms of passenger ticket-flight volume within this dataset.
+จึงสามารถสรุปได้ว่า Economy เป็น Fare Class หลักในด้านปริมาณ Ticket Flight ของข้อมูลชุดนี้
 
 ---
 
-## 5. How do ticket sales change over time?
+## 5. ยอดขายตั๋วเปลี่ยนแปลงอย่างไรตามช่วงเวลา?
 
-### Business Question
-ยอดขายตั๋วเปลี่ยนแปลงอย่างไรตามช่วงเวลา?
-
-### Data Used
+### ข้อมูลที่ใช้
 - Fact Table: `fact_ticket_sales`
 - Dimension: `dim_date`
 - Measure: `amount`
 
-### Result
+### ผลการวิเคราะห์
 
-| Year | Month | Total Sales |
+| ปี | เดือน | ยอดขายรวม |
 |---|---|---:|
-| 2017 | July | 4,983,243,300 |
-| 2017 | August | 13,509,694,600 |
-| 2017 | September | 2,274,043,000 |
+| 2017 | กรกฎาคม | 4,983,243,300 |
+| 2017 | สิงหาคม | 13,509,694,600 |
+| 2017 | กันยายน | 2,274,043,000 |
 
 ### Business Insight
-Ticket sales reached their highest observed level in **August 2017**, with total sales of **13,509,694,600**.
+ยอดขายตั๋วสูงที่สุดในช่วงข้อมูลที่นำมาวิเคราะห์คือ **เดือนสิงหาคม 2017** โดยมียอดขายรวม **13,509,694,600**
 
-July recorded **4,983,243,300**, while September recorded **2,274,043,000**.
+เดือนกรกฎาคมมียอดขาย **4,983,243,300** และเดือนกันยายนมียอดขาย **2,274,043,000**
 
-The results show substantial variation in ticket sales across the observed months. However, the results alone do not establish the cause of these differences, and the dataset may not represent complete calendar months for every period.
+ผลลัพธ์แสดงให้เห็นว่ายอดขายมีความแตกต่างกันอย่างชัดเจนในแต่ละเดือน อย่างไรก็ตาม ข้อมูลเพียงส่วนนี้ยังไม่สามารถระบุสาเหตุของการเพิ่มขึ้นหรือลดลงของยอดขายได้ และช่วงข้อมูลของแต่ละเดือนอาจไม่ได้ครอบคลุมจำนวนวันเท่ากันทั้งหมด
 
 ---
 
-## 6. Which departure airport has the highest number of Ticket Flights?
+## 6. สนามบินต้นทางใดมีจำนวน Ticket Flight มากที่สุด?
 
-### Business Question
-สนามบินต้นทางใดมีจำนวน Ticket Flight มากที่สุด?
-
-### Data Used
+### ข้อมูลที่ใช้
 - Fact Table: `fact_ticket_sales`
 - Dimension: `dim_airport`
 - Measure: `ticket_flight_count`
-- Dimension Role: Departure Airport
+- บทบาทของ Dimension: Departure Airport
 
-### Result
+### ผลการวิเคราะห์
 **SVO — Sheremetyevo International Airport, Moscow**
 
-**Total Ticket Flights = 155,073**
+**จำนวน Ticket Flight = 155,073 รายการ**
 
 ### Business Insight
-**SVO (Sheremetyevo International Airport)** has the highest number of departing Ticket Flights, with **155,073 transactions**.
+สนามบิน **SVO (Sheremetyevo International Airport)** มีจำนวน Ticket Flight ขาออกสูงที่สุด โดยมีทั้งหมด **155,073 รายการ**
 
-This indicates that SVO is the most active departure airport by ticket-flight volume within the analyzed dataset.
+จึงเป็นสนามบินต้นทางที่มีปริมาณ Ticket Flight สูงที่สุดในข้อมูลที่นำมาวิเคราะห์
 
 ---
 
-## 7. Which arrival airport has the highest number of Ticket Flights?
+## 7. สนามบินปลายทางใดมีจำนวน Ticket Flight มากที่สุด?
 
-### Business Question
-สนามบินปลายทางใดมีจำนวน Ticket Flight มากที่สุด?
-
-### Data Used
+### ข้อมูลที่ใช้
 - Fact Table: `fact_ticket_sales`
 - Dimension: `dim_airport`
 - Measure: `ticket_flight_count`
-- Dimension Role: Arrival Airport
+- บทบาทของ Dimension: Arrival Airport
 
-### Result
+### ผลการวิเคราะห์
 **SVO — Sheremetyevo International Airport, Moscow**
 
-**Total Ticket Flights = 150,086**
+**จำนวน Ticket Flight = 150,086 รายการ**
 
 ### Business Insight
-**SVO (Sheremetyevo International Airport)** also has the highest number of arriving Ticket Flights, with **150,086 transactions**.
+สนามบิน **SVO (Sheremetyevo International Airport)** มีจำนวน Ticket Flight ขาเข้าสูงที่สุด โดยมีทั้งหมด **150,086 รายการ**
 
-The results show that SVO has high activity in both departure and arrival roles within the dataset.
+เมื่อพิจารณาร่วมกับผลการวิเคราะห์ข้อที่ 6 จะเห็นว่า SVO มีปริมาณ Ticket Flight สูงทั้งในบทบาทสนามบินต้นทางและสนามบินปลายทาง
 
 ---
 
-## 8. Which departure-arrival route has the highest number of Ticket Flights?
+## 8. เส้นทางต้นทาง–ปลายทางใดมีจำนวน Ticket Flight มากที่สุด?
 
-### Business Question
-เส้นทางต้นทาง–ปลายทางใดมีจำนวน Ticket Flight มากที่สุด?
-
-### Data Used
+### ข้อมูลที่ใช้
 - Fact Table: `fact_ticket_sales`
 - Dimension: `dim_airport`
 - Measure: `ticket_flight_count`
-- Dimension Roles:
+- บทบาทของ Dimension:
   - Departure Airport
   - Arrival Airport
 
-### Result
+### ผลการวิเคราะห์
 
 **SVO → LED**
 
-- Departure: Moscow
-- Arrival: St. Petersburg
-- Total Ticket Flights: **16,461**
+- ต้นทาง: Moscow
+- ปลายทาง: St. Petersburg
+- จำนวน Ticket Flight: **16,461 รายการ**
 
 ### Business Insight
-The route with the highest number of Ticket Flights is **SVO → LED (Moscow → St. Petersburg)**, with **16,461 transactions**.
+เส้นทางที่มีจำนวน Ticket Flight สูงที่สุดคือ **SVO → LED (Moscow → St. Petersburg)** โดยมีจำนวนทั้งหมด **16,461 รายการ**
 
-This makes SVO–LED the highest-volume directional route in the analyzed ticket-flight data.
+ดังนั้นเส้นทาง SVO → LED จึงเป็นเส้นทางแบบมีทิศทางที่มีปริมาณ Ticket Flight สูงที่สุดในข้อมูลที่นำมาวิเคราะห์
 
 ---
 
-## Summary of Key Business Insights
+## สรุปผลการวิเคราะห์เชิงธุรกิจ
 
-| Business Question | Key Result |
+| คำถามทางธุรกิจ | ผลลัพธ์สำคัญ |
 |---|---|
-| Q1 Total Ticket Sales | 20,766,980,900 |
-| Q2 Total Ticket Flights | 1,045,726 |
-| Q3 Highest Sales Fare Class | Economy — 14,695,684,400 |
-| Q4 Highest Volume Fare Class | Economy — 920,793 |
-| Q5 Highest Sales Period | August 2017 — 13,509,694,600 |
-| Q6 Top Departure Airport | SVO — 155,073 |
-| Q7 Top Arrival Airport | SVO — 150,086 |
-| Q8 Top Route | SVO → LED — 16,461 |
+| Q1 ยอดขายตั๋วรวม | 20,766,980,900 |
+| Q2 จำนวน Ticket Flight ทั้งหมด | 1,045,726 |
+| Q3 Fare Class ที่มียอดขายสูงที่สุด | Economy — 14,695,684,400 |
+| Q4 Fare Class ที่มี Ticket Flight มากที่สุด | Economy — 920,793 |
+| Q5 ช่วงเวลาที่มียอดขายสูงที่สุด | สิงหาคม 2017 — 13,509,694,600 |
+| Q6 สนามบินต้นทางอันดับ 1 | SVO — 155,073 |
+| Q7 สนามบินปลายทางอันดับ 1 | SVO — 150,086 |
+| Q8 เส้นทางที่มี Ticket Flight มากที่สุด | SVO → LED — 16,461 |
 
-## Conclusion
+## บทสรุป
 
-The analysis shows that **Economy Class is the dominant Fare Class** in both total sales and Ticket Flight volume. Ticket sales reached their highest observed monthly value in **August 2017**.
+จากการวิเคราะห์พบว่า **Economy Class เป็น Fare Class หลักของข้อมูลชุดนี้** โดยมีทั้งยอดขายรวมและจำนวน Ticket Flight สูงที่สุด
 
-**SVO (Sheremetyevo International Airport)** is the leading airport for both departure and arrival Ticket Flight volume, while **SVO → LED (Moscow → St. Petersburg)** is the highest-volume directional route in the analyzed dataset.
+เมื่อวิเคราะห์ตามช่วงเวลา พบว่า **เดือนสิงหาคม 2017** มียอดขายสูงที่สุดในช่วงข้อมูลที่นำมาวิเคราะห์
 
-These insights demonstrate how the Airline Data Warehouse can support multidimensional analysis across sales, Fare Class, time, airports, and routes.
+ในด้านสนามบิน **SVO (Sheremetyevo International Airport)** มีจำนวน Ticket Flight สูงที่สุดทั้งในฐานะสนามบินต้นทางและสนามบินปลายทาง ขณะที่เส้นทาง **SVO → LED (Moscow → St. Petersburg)** เป็นเส้นทางที่มีจำนวน Ticket Flight สูงที่สุด
+
+ผลการวิเคราะห์เหล่านี้แสดงให้เห็นว่า Airline Data Warehouse สามารถนำมาใช้วิเคราะห์ข้อมูลในหลายมิติ เช่น ยอดขาย Fare Class ช่วงเวลา สนามบิน และเส้นทางการบิน เพื่อสนับสนุนการวิเคราะห์ข้อมูลเชิงธุรกิจได้
