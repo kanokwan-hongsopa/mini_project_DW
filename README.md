@@ -26,3 +26,23 @@
 13.	Flight Status แต่ละประเภทมีจำนวนเที่ยวบินเท่าใด?
 14.	สนามบินต้นทางใดมีเที่ยวบินล่าช้าเฉลี่ยมากที่สุด?
 15.	ในแต่ละช่วงเวลา เส้นทางต้นทาง–ปลายทางและ Fare Class ใดสร้างยอดขายตั๋วสูงที่สุด?
+## Airline Analytics Dashboard
+
+Dashboard พัฒนาด้วย Streamlit และ Plotly โดยเชื่อมต่อกับ DuckDB Data Warehouse โดยตรง
+
+### Features
+
+- Business Questions Q1-Q15
+- KPI Summary
+- Date Range Filter
+- Cascading Filters
+- Route Drill-down
+- Interactive Visualizations
+- CSV Download
+
+### Run Dashboard
+
+```bash
+pip install -r requirements.txt
+cd airline_dw
+streamlit run app.py
