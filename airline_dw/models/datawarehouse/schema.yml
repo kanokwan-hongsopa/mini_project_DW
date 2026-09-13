@@ -1,0 +1,46 @@
+version: 2
+
+models:
+
+  - name: dim_date
+    description: "Dimension ตารางวันที่สำหรับใช้วิเคราะห์ข้อมูลตามช่วงเวลา"
+    columns:
+      - name: date_key
+        description: "Surrogate key ของวันที่ในรูปแบบ YYYYMMDD"
+        data_tests:
+          - not_null
+          - unique
+
+      - name: full_date
+        description: "วันที่เต็ม"
+        data_tests:
+          - not_null
+          - unique
+
+      - name: day
+        data_tests:
+          - not_null
+
+      - name: day_name
+        data_tests:
+          - not_null
+
+      - name: week
+        data_tests:
+          - not_null
+
+      - name: month
+        data_tests:
+          - not_null
+
+      - name: month_name
+        data_tests:
+          - not_null
+
+      - name: quarter
+        data_tests:
+          - not_null
+
+      - name: year
+        data_tests:
+          - not_null
