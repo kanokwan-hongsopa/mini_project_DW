@@ -75,3 +75,151 @@ models:
         description: "Ticket amount for the flight segment"
         data_tests:
           - not_null
+
+  - name: stg_aircrafts
+    description: "Cleaned aircraft master data"
+    columns:
+      - name: aircraft_code
+        description: "Unique aircraft business key"
+        data_tests:
+          - not_null
+          - unique
+
+      - name: model
+        data_tests:
+          - not_null
+
+      - name: range
+        data_tests:
+          - not_null
+
+
+  - name: stg_airports
+    description: "Cleaned airport master data"
+    columns:
+      - name: airport_code
+        description: "Unique airport business key"
+        data_tests:
+          - not_null
+          - unique
+
+      - name: airport_name
+        data_tests:
+          - not_null
+
+      - name: city
+        data_tests:
+          - not_null
+
+      - name: timezone
+        data_tests:
+          - not_null
+
+
+  - name: stg_flights
+    description: "Cleaned flight schedule and operational records"
+    columns:
+      - name: flight_id
+        description: "Unique flight identifier"
+        data_tests:
+          - not_null
+          - unique
+
+      - name: flight_no
+        data_tests:
+          - not_null
+
+      - name: scheduled_departure
+        data_tests:
+          - not_null
+
+      - name: scheduled_arrival
+        data_tests:
+          - not_null
+
+      - name: departure_airport
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_airports')
+                field: airport_code
+
+      - name: arrival_airport
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_airports')
+                field: airport_code
+
+      - name: status
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values:
+                  - Arrived
+                  - Scheduled
+                  - On Time
+                  - Cancelled
+                  - Departed
+                  - Delayed
+
+      - name: aircraft_code
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_aircrafts')
+                field: aircraft_code
+
+
+  - name: stg_seats
+    description: "Cleaned aircraft seating configuration"
+    columns:
+      - name: aircraft_code
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_aircrafts')
+                field: aircraft_code
+
+      - name: seat_no
+        data_tests:
+          - not_null
+
+      - name: fare_conditions
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values:
+                  - Business
+                  - Comfort
+                  - Economy
+
+
+  - name: stg_boarding_passes
+    description: "Cleaned passenger boarding pass records"
+    columns:
+      - name: ticket_no
+        data_tests:
+          - not_null
+
+      - name: flight_id
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_flights')
+                field: flight_id
+
+      - name: boarding_no
+        data_tests:
+          - not_null
+
+      - name: seat_no
+        data_tests:
+          - not_null
