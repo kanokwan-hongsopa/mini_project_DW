@@ -1,0 +1,31 @@
+ version: 2
+
+sources:
+  - name: raw
+    schema: raw
+    description: "Raw airline operational data loaded from CSV files"
+
+    tables:
+      - name: aircrafts_data
+        description: "Aircraft master data"
+
+      - name: airports_data
+        description: "Airport master data"
+
+      - name: boarding_passes
+        description: "Passenger boarding pass records"
+
+      - name: bookings
+        description: "Booking transaction records"
+
+      - name: flights
+        description: "Flight schedule and operation records"
+
+      - name: seats
+        description: "Aircraft seat configuration"
+
+      - name: ticket_flights
+        description: "Ticket and flight segment transactions"
+
+      - name: tickets
+        description: "Passenger ticket records"
