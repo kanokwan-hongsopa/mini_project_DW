@@ -127,3 +127,167 @@ models:
                   - Cancelled
                   - Departed
                   - Delayed
+  - name: fact_ticket_sales
+    description: "Fact table for ticket sales at ticket-flight segment grain"
+    columns:
+      - name: ticket_sales_key
+        description: "Surrogate key for ticket sales fact"
+        data_tests:
+          - not_null
+          - unique
+
+      - name: ticket_no
+        description: "Ticket number"
+        data_tests:
+          - not_null
+
+      - name: flight_id
+        description: "Flight identifier"
+        data_tests:
+          - not_null
+
+      - name: date_key
+        description: "Foreign key to date dimension"
+        data_tests:
+          - not_null
+
+      - name: departure_airport_key
+        description: "Foreign key to departure airport"
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_airport')
+                field: airport_key
+
+      - name: arrival_airport_key
+        description: "Foreign key to arrival airport"
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_airport')
+                field: airport_key
+
+      - name: aircraft_key
+        description: "Foreign key to aircraft dimension"
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_aircraft')
+                field: aircraft_key
+
+      - name: fare_class_key
+        description: "Foreign key to fare class dimension"
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_fare_class')
+                field: fare_class_key
+
+      - name: amount
+        description: "Ticket sales amount"
+        data_tests:
+          - not_null
+
+      - name: ticket_flight_count
+        description: "Additive measure representing one ticket-flight segment"
+        data_tests:
+          - not_null
+
+
+  - name: fact_flight_operations
+    description: "Fact table for flight operations at one row per flight grain"
+    columns:
+      - name: flight_operations_key
+        description: "Surrogate key for flight operations fact"
+        data_tests:
+          - not_null
+          - unique
+
+      - name: flight_id
+        description: "Flight identifier"
+        data_tests:
+          - not_null
+          - unique
+
+      - name: date_key
+        description: "Foreign key to date dimension"
+        data_tests:
+          - not_null
+
+      - name: departure_airport_key
+        description: "Foreign key to departure airport"
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_airport')
+                field: airport_key
+
+      - name: arrival_airport_key
+        description: "Foreign key to arrival airport"
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_airport')
+                field: airport_key
+
+      - name: aircraft_key
+        description: "Foreign key to aircraft dimension"
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_aircraft')
+                field: aircraft_key
+
+      - name: status_key
+        description: "Foreign key to flight status dimension"
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_flight_status')
+                field: status_key
+
+      - name: flight_count
+        description: "Additive measure representing one flight"
+        data_tests:
+          - not_null
+
+
+  - name: fact_seat_inventory
+    description: "Fact table for seat inventory aggregated by aircraft and fare class"
+    columns:
+      - name: seat_inventory_key
+        description: "Surrogate key for seat inventory fact"
+        data_tests:
+          - not_null
+          - unique
+
+      - name: aircraft_key
+        description: "Foreign key to aircraft dimension"
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_aircraft')
+                field: aircraft_key
+
+      - name: fare_class_key
+        description: "Foreign key to fare class dimension"
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_fare_class')
+                field: fare_class_key
+
+      - name: seat_count
+        description: "Number of seats for each aircraft and fare class"
+        data_tests:
+          - not_null
