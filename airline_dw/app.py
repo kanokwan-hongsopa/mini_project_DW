@@ -194,4 +194,68 @@ st.bar_chart(
     x="model",
     y="total_seats"
 )
+# =========================
+# Q12: FARE CLASS SEAT SHARE
+# =========================
+
+st.subheader("Fare Class Seat Share by Aircraft Model")
+
+fare_share = con.execute("""
+    WITH seat_summary AS (
+        SELECT
+            a.model,
+            fc.fare_class,
+            SUM(f.seat_count) AS seat_count
+        FROM fact_seat_inventory f
+        JOIN dim_aircraft a
+            ON f.aircraft_key = a.aircraft_key
+        JOIN dim_fare_class fc
+            ON f.fare_class_key = fc.fare_class_key
+        GROUP BY
+            a.model,
+            fc.fare_class
+    )
+
+    SELECT
+        model,
+        fare_class,
+        seat_count
+    FROM seat_summary
+    ORDER BY
+        model,
+        seat_count DESC
+""").fetchdf()
+
+st.bar_chart(
+    fare_share,
+    x="model",
+    y="seat_count",
+    color="fare_class"
+)
+
+
+# =========================
+# Q13: FLIGHT STATUS
+# =========================
+
+st.subheader("Flights by Status")
+
+flight_status = con.execute("""
+    SELECT
+        s.status_name,
+        SUM(f.flight_count) AS total_flights
+    FROM fact_flight_operations f
+    JOIN dim_flight_status s
+        ON f.status_key = s.status_key
+    GROUP BY
+        s.status_name
+    ORDER BY
+        total_flights DESC
+""").fetchdf()
+
+st.bar_chart(
+    flight_status,
+    x="status_name",
+    y="total_flights"
+)
 con.close()
