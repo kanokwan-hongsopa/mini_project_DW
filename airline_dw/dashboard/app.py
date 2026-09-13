@@ -7,32 +7,38 @@ st.set_page_config(
     layout="wide"
 )
 
+# Connect to DuckDB
 DB_PATH = Path(__file__).resolve().parents[1] / "dev.duckdb"
 
 con = duckdb.connect(str(DB_PATH), read_only=True)
 
+# =========================
+# TITLE
+# =========================
+
 st.title("Airline Data Warehouse Dashboard")
 st.write("Dashboard for analyzing airline operations and ticket sales")
 
-# KPI 1: Total Ticket Sales
+
+# =========================
+# KPI
+# =========================
+
 total_sales = con.execute("""
     SELECT SUM(amount)
     FROM fact_ticket_sales
 """).fetchone()[0]
 
-# KPI 2: Total Ticket Flights
 total_ticket_flights = con.execute("""
     SELECT SUM(ticket_flight_count)
     FROM fact_ticket_sales
 """).fetchone()[0]
 
-# KPI 3: Total Flights
 total_flights = con.execute("""
     SELECT SUM(flight_count)
     FROM fact_flight_operations
 """).fetchone()[0]
 
-# KPI 4: Average Departure Delay
 avg_delay = con.execute("""
     SELECT AVG(departure_delay_minutes)
     FROM fact_flight_operations
@@ -59,6 +65,37 @@ col3.metric(
 col4.metric(
     "Average Departure Delay",
     f"{avg_delay:,.2f} min"
+)
+
+
+# =========================
+# Q9: TOP ROUTES BY SALES
+# =========================
+
+st.subheader("Top Routes by Ticket Sales")
+
+route_sales = con.execute("""
+    SELECT
+        dep.airport_code AS departure_airport,
+        arr.airport_code AS arrival_airport,
+        dep.airport_code || ' → ' || arr.airport_code AS route,
+        SUM(f.amount) AS total_ticket_sales
+    FROM fact_ticket_sales f
+    JOIN dim_airport dep
+        ON f.departure_airport_key = dep.airport_key
+    JOIN dim_airport arr
+        ON f.arrival_airport_key = arr.airport_key
+    GROUP BY
+        dep.airport_code,
+        arr.airport_code
+    ORDER BY total_ticket_sales DESC
+    LIMIT 10
+""").fetchdf()
+
+st.bar_chart(
+    route_sales,
+    x="route",
+    y="total_ticket_sales"
 )
 
 con.close()
