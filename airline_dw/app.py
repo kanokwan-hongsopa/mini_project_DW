@@ -258,4 +258,115 @@ st.bar_chart(
     x="status_name",
     y="total_flights"
 )
+# =========================
+# Q14: AVERAGE DEPARTURE DELAY
+# =========================
+
+st.subheader("Average Departure Delay by Airport")
+
+departure_delay = con.execute("""
+    SELECT
+        a.airport_code,
+        a.airport_name,
+        ROUND(AVG(f.departure_delay_minutes), 2) AS avg_departure_delay_minutes
+    FROM fact_flight_operations f
+    JOIN dim_airport a
+        ON f.departure_airport_key = a.airport_key
+    WHERE f.departure_delay_minutes > 0
+    GROUP BY
+        a.airport_code,
+        a.airport_name
+    ORDER BY
+        avg_departure_delay_minutes DESC
+    LIMIT 10
+""").fetchdf()
+
+st.bar_chart(
+    departure_delay,
+    x="airport_code",
+    y="avg_departure_delay_minutes"
+)
+
+
+# =========================
+# Q15: MONTHLY TOP ROUTE + FARE CLASS SALES
+# =========================
+
+st.subheader("Top Route and Fare Class by Month")
+
+monthly_route_fare = con.execute("""
+    WITH sales_summary AS (
+
+        SELECT
+            d.year,
+            d.month,
+            d.month_name,
+            dep.airport_code AS departure_airport,
+            arr.airport_code AS arrival_airport,
+            fc.fare_class,
+            SUM(f.amount) AS total_ticket_sales
+
+        FROM fact_ticket_sales f
+
+        JOIN dim_date d
+            ON f.date_key = d.date_key
+
+        JOIN dim_airport dep
+            ON f.departure_airport_key = dep.airport_key
+
+        JOIN dim_airport arr
+            ON f.arrival_airport_key = arr.airport_key
+
+        JOIN dim_fare_class fc
+            ON f.fare_class_key = fc.fare_class_key
+
+        GROUP BY
+            d.year,
+            d.month,
+            d.month_name,
+            dep.airport_code,
+            arr.airport_code,
+            fc.fare_class
+    ),
+
+    ranked AS (
+
+        SELECT
+            *,
+            DENSE_RANK() OVER (
+                PARTITION BY year, month
+                ORDER BY total_ticket_sales DESC
+            ) AS sales_rank
+
+        FROM sales_summary
+    )
+
+    SELECT
+        year,
+        month,
+        month_name,
+        departure_airport,
+        arrival_airport,
+        fare_class,
+        total_ticket_sales
+
+    FROM ranked
+
+    WHERE sales_rank = 1
+
+    ORDER BY
+        year,
+        month
+""").fetchdf()
+
+st.dataframe(
+    monthly_route_fare,
+    use_container_width=True
+)
+
+st.bar_chart(
+    monthly_route_fare,
+    x="month_name",
+    y="total_ticket_sales"
+)
 con.close()
