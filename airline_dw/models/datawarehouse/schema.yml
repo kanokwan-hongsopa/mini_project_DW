@@ -43,4 +43,87 @@ models:
 
       - name: year
         data_tests:
+          - not_null  
+  - name: dim_airport
+    description: "Dimension ข้อมูลสนามบิน"
+    columns:
+      - name: airport_key
+        data_tests:
           - not_null
+          - unique
+
+      - name: airport_code
+        data_tests:
+          - not_null
+          - unique
+
+      - name: airport_name
+        data_tests:
+          - not_null
+
+      - name: city
+        data_tests:
+          - not_null
+
+      - name: timezone
+        data_tests:
+          - not_null
+  - name: dim_aircraft
+    description: "Dimension ข้อมูลรุ่นเครื่องบิน"
+    columns:
+      - name: aircraft_key
+        data_tests:
+          - not_null
+          - unique
+
+      - name: aircraft_code
+        data_tests:
+          - not_null
+          - unique
+
+      - name: model
+        data_tests:
+          - not_null
+
+      - name: range
+        data_tests:
+          - not_null
+  - name: dim_fare_class
+    description: "Dimension ประเภทชั้นโดยสาร"
+    columns:
+      - name: fare_class_key
+        data_tests:
+          - not_null
+          - unique
+
+      - name: fare_class
+        data_tests:
+          - not_null
+          - unique
+          - accepted_values:
+              arguments:
+                values:
+                  - Business
+                  - Comfort
+                  - Economy
+  - name: dim_flight_status
+    description: "Dimension สถานะเที่ยวบิน"
+    columns:
+      - name: status_key
+        data_tests:
+          - not_null
+          - unique
+
+      - name: status_name
+        data_tests:
+          - not_null
+          - unique
+          - accepted_values:
+              arguments:
+                values:
+                  - Arrived
+                  - Scheduled
+                  - On Time
+                  - Cancelled
+                  - Departed
+                  - Delayed
