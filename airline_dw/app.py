@@ -148,4 +148,50 @@ st.bar_chart(
     x="model",
     y="total_seats"
 )
+# =========================
+# Q10: AIRCRAFT USAGE
+# =========================
+
+st.subheader("Aircraft Usage by Number of Flights")
+
+aircraft_usage = con.execute("""
+    SELECT
+        a.model,
+        SUM(f.flight_count) AS total_flights
+    FROM fact_flight_operations f
+    JOIN dim_aircraft a
+        ON f.aircraft_key = a.aircraft_key
+    GROUP BY a.model
+    ORDER BY total_flights DESC
+""").fetchdf()
+
+st.bar_chart(
+    aircraft_usage,
+    x="model",
+    y="total_flights"
+)
+
+
+# =========================
+# Q11: AIRCRAFT SEAT COUNT
+# =========================
+
+st.subheader("Seat Capacity by Aircraft Model")
+
+aircraft_seats = con.execute("""
+    SELECT
+        a.model,
+        SUM(f.seat_count) AS total_seats
+    FROM fact_seat_inventory f
+    JOIN dim_aircraft a
+        ON f.aircraft_key = a.aircraft_key
+    GROUP BY a.model
+    ORDER BY total_seats DESC
+""").fetchdf()
+
+st.bar_chart(
+    aircraft_seats,
+    x="model",
+    y="total_seats"
+)
 con.close()
