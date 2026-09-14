@@ -199,6 +199,7 @@
 
 **Fact ที่ใช้:** `fact_ticket_sales`  
 **Dimension ที่ใช้:** `dim_airport`
+**Measure ที่ใช้:** `SUM(amount)` – ยอดขายตั๋วรวมของแต่ละเส้นทาง
 
 ### ผลการวิเคราะห์
 เส้นทาง **DME → KHV** จาก Domodedovo International Airport ไปยัง Khabarovsk-Novy Airport สร้างยอดขายตั๋วสูงที่สุด โดยมียอดขายรวม **753,478,300**
@@ -214,6 +215,7 @@
 
 **Fact ที่ใช้:** `fact_flight_operations`  
 **Dimension ที่ใช้:** `dim_aircraft`
+**Measure ที่ใช้:** `SUM(flight_count)` – จำนวนเที่ยวบินทั้งหมดของ Aircraft แต่ละรุ่น
 
 ### ผลการวิเคราะห์
 เครื่องบินรุ่น **Cessna 208 Caravan (CN1)** ถูกใช้กับเที่ยวบินมากที่สุด จำนวน **9,273 เที่ยวบิน**
@@ -231,6 +233,7 @@ Cessna 208 Caravan เป็นเครื่องบินที่มีจ�
 
 **Fact ที่ใช้:** `fact_seat_inventory`  
 **Dimension ที่ใช้:** `dim_aircraft`
+**Measure ที่ใช้:** `SUM(seat_count)` – จำนวนที่นั่งทั้งหมดของ Aircraft แต่ละรุ่น
 
 ### ผลการวิเคราะห์
 
@@ -255,6 +258,7 @@ Cessna 208 Caravan เป็นเครื่องบินที่มีจ�
 
 **Fact ที่ใช้:** `fact_seat_inventory`  
 **Dimension ที่ใช้:** `dim_aircraft`, `dim_fare_class`
+**Measure ที่ใช้:** `SUM(seat_count)` และ `seat_percentage` – จำนวนและสัดส่วนที่นั่งของแต่ละ Fare Class
 
 ### ผลการวิเคราะห์
 โดยรวมพบว่า **Economy เป็น Fare Class ที่มีสัดส่วนที่นั่งสูงที่สุดในเครื่องบินทุกแบบ**
@@ -275,6 +279,7 @@ Economy เป็นชั้นโดยสารหลักของเคร
 
 **Fact ที่ใช้:** `fact_flight_operations`  
 **Dimension ที่ใช้:** `dim_flight_status`
+**Measure ที่ใช้:** `SUM(flight_count)` – จำนวนเที่ยวบินในแต่ละสถานะ
 
 ### ผลการวิเคราะห์
 
@@ -296,6 +301,7 @@ Economy เป็นชั้นโดยสารหลักของเคร
 
 **Fact ที่ใช้:** `fact_flight_operations`  
 **Dimension ที่ใช้:** `dim_airport`
+**Measure ที่ใช้:** `AVG(departure_delay_minutes)` และ `COUNT(*)` – ค่าเฉลี่ยเวลาล่าช้าและจำนวนเที่ยวบินที่ล่าช้า
 
 ### ผลการวิเคราะห์
 เมื่อพิจารณาเฉพาะเที่ยวบินที่มี `departure_delay_minutes > 0` พบว่า **ULY – Ulyanovsk East Airport** มีเวลาออกเดินทางล่าช้าเฉลี่ยสูงที่สุดที่ **25.73 นาที** จากเที่ยวบินที่ล่าช้า **92 เที่ยวบิน**
@@ -313,6 +319,7 @@ Ulyanovsk East Airport มีค่าเฉลี่ยความล่าช
 
 **Fact ที่ใช้:** `fact_ticket_sales`  
 **Dimension ที่ใช้:** `dim_date`, `dim_airport`, `dim_fare_class`
+**Measure ที่ใช้:** `SUM(amount)` – ยอดขายตั๋วรวมตามเดือน เส้นทาง และ Fare Class
 
 ### ผลการวิเคราะห์
 
