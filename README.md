@@ -98,7 +98,7 @@ DuckDB Data Warehouse
 Analytical Queries
         ↓
 Streamlit Dashboard
-
+```
 ---
 
 ## 6. Data Model
@@ -116,4 +116,5 @@ fact_ticket_sales
 fact_flight_operations
 fact_seat_inventory
 <img width="2205" height="1661" alt="Untitled Diagram drawio (25)" src="https://github.com/user-attachments/assets/d980e549-26cd-4dfc-89ed-e4b6e11e1b0b" />
+
 
