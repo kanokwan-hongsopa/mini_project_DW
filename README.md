@@ -460,3 +460,4 @@ mini_project_DW/
 
 Dashboard รองรับการกรองข้อมูล การ Drill-down และการวิเคราะห์ข้อมูลหลายมิติ ทำให้สามารถนำข้อมูลใน Data Warehouse ไปใช้เพื่อสนับสนุนการวิเคราะห์เชิงธุรกิจได้
 
+Dashboard URL: https://miniprojectdw-72b5jte8lfnerbx8jcrms7.streamlit.app/
