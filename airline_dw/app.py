@@ -10,7 +10,7 @@ from pathlib import Path
 # =========================================================
 
 st.set_page_config(
-    page_title="Airline Analytics Dashboard",
+    page_title="Airline Intelligence Dashboard",
     page_icon="✈️",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -21,12 +21,12 @@ st.set_page_config(
 # COLORS
 # =========================================================
 
-NAVY = "#0F172A"
+NAVY = "#0B1220"
 BLUE = "#2563EB"
 CYAN = "#06B6D4"
-PURPLE = "#8B5CF6"
-ORANGE = "#F97316"
-GREEN = "#10B981"
+PURPLE = "#6366F1"
+ORANGE = "#F59E0B"
+GREEN = "#14B8A6"
 RED = "#EF4444"
 YELLOW = "#F59E0B"
 
@@ -48,132 +48,269 @@ st.markdown(
     """
 <style>
 
-/* Main page */
+/* =========================================================
+   AIRLINE INTELLIGENCE — PREMIUM UI
+   ========================================================= */
+
+:root {
+    --ink: #0B1220;
+    --muted: #64748B;
+    --line: #E6ECF5;
+    --panel: rgba(255,255,255,.92);
+    --blue: #2563EB;
+    --sky: #0EA5E9;
+    --cyan: #06B6D4;
+}
+
 .stApp {
     background:
-        radial-gradient(circle at 8% 0%, rgba(6,182,212,.07), transparent 24%),
-        radial-gradient(circle at 94% 4%, rgba(139,92,246,.07), transparent 24%),
-        #F7F9FC;
+        radial-gradient(circle at 6% -5%, rgba(37,99,235,.12), transparent 28%),
+        radial-gradient(circle at 96% 0%, rgba(6,182,212,.10), transparent 24%),
+        linear-gradient(180deg, #F8FBFF 0%, #F6F8FC 55%, #F8FAFC 100%);
+    color: var(--ink);
 }
 
 .block-container {
-    max-width: 1500px;
-    padding-top: 1.3rem;
-    padding-bottom: 3rem;
+    max-width: 1480px;
+    padding-top: 1.05rem;
+    padding-bottom: 3.2rem;
 }
 
+header[data-testid="stHeader"] {
+    background: transparent;
+}
 
-/* Sidebar */
+#MainMenu {
+    visibility: hidden;
+}
+
+footer {
+    visibility: hidden;
+}
+
 section[data-testid="stSidebar"] {
     background:
-        linear-gradient(
-            165deg,
-            #0B1220 0%,
-            #172554 58%,
-            #312E81 100%
-        );
+        radial-gradient(circle at 20% 0%, rgba(14,165,233,.18), transparent 26%),
+        linear-gradient(180deg, #08111F 0%, #0F1E3C 58%, #172554 100%);
+    border-right: 1px solid rgba(255,255,255,.08);
+}
+
+section[data-testid="stSidebar"] > div {
+    padding-top: .9rem;
 }
 
 section[data-testid="stSidebar"] h1,
 section[data-testid="stSidebar"] h2,
 section[data-testid="stSidebar"] h3,
 section[data-testid="stSidebar"] label,
-section[data-testid="stSidebar"] p {
-    color: white !important;
+section[data-testid="stSidebar"] p,
+section[data-testid="stSidebar"] [data-testid="stCaptionContainer"] {
+    color: #F8FAFC !important;
 }
 
-/* Date field */
+.sidebar-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: rgba(14,165,233,.13);
+    border: 1px solid rgba(125,211,252,.24);
+    color: #BAE6FD;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 1.2px;
+    margin: 3px 0 10px 0;
+}
+
+.sidebar-kicker::before {
+    content: "";
+    width: 7px;
+    height: 7px;
+    border-radius: 999px;
+    background: #22D3EE;
+    box-shadow: 0 0 0 4px rgba(34,211,238,.12);
+}
+
 section[data-testid="stSidebar"] input {
     color: #0F172A !important;
     -webkit-text-fill-color: #0F172A !important;
-    background-color: white !important;
+    background-color: #FFFFFF !important;
 }
 
-section[data-testid="stSidebar"] div[data-baseweb="input"] {
-    background-color: white !important;
-    border-radius: 12px !important;
-}
-
-/* Selectbox */
+section[data-testid="stSidebar"] div[data-baseweb="input"],
 section[data-testid="stSidebar"] div[data-baseweb="select"] > div {
-    background-color: white !important;
-    color: #0F172A !important;
-    border-radius: 12px !important;
+    background-color: #FFFFFF !important;
+    border: 1px solid rgba(148,163,184,.24) !important;
+    border-radius: 13px !important;
+    min-height: 44px;
+    box-shadow: 0 6px 18px rgba(2,6,23,.10);
 }
 
 section[data-testid="stSidebar"] div[data-baseweb="select"] span {
     color: #0F172A !important;
 }
 
-
-/* Hero */
 .hero {
+    position: relative;
+    overflow: hidden;
     background:
-        linear-gradient(
-            115deg,
-            #0B1220 0%,
-            #312E81 38%,
-            #2563EB 70%,
-            #06B6D4 100%
-        );
-
-    border-radius: 26px;
-    padding: 34px 38px;
-    margin-bottom: 24px;
-
+        radial-gradient(circle at 90% 18%, rgba(34,211,238,.27), transparent 22%),
+        radial-gradient(circle at 70% 130%, rgba(59,130,246,.40), transparent 38%),
+        linear-gradient(118deg, #07101F 0%, #12235C 46%, #1D4ED8 76%, #06B6D4 118%);
+    border: 1px solid rgba(255,255,255,.10);
+    border-radius: 28px;
+    padding: 34px 38px 32px 38px;
+    margin-bottom: 14px;
     box-shadow:
-        0 20px 50px rgba(37,99,235,.18);
+        0 24px 55px rgba(37,99,235,.18),
+        inset 0 1px 0 rgba(255,255,255,.08);
 }
 
-.hero-small {
-    color: #CFFAFE;
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: .5px;
-    margin-bottom: 8px;
+.hero::after {
+    content: "";
+    position: absolute;
+    width: 250px;
+    height: 250px;
+    right: -70px;
+    top: -92px;
+    border-radius: 999px;
+    border: 1px solid rgba(255,255,255,.12);
+    box-shadow:
+        0 0 0 34px rgba(255,255,255,.035),
+        0 0 0 68px rgba(255,255,255,.02);
+}
+
+.hero-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: #BAE6FD;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 1.15px;
+    margin-bottom: 12px;
+}
+
+.hero-kicker-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    background: #22D3EE;
+    box-shadow: 0 0 0 5px rgba(34,211,238,.13);
 }
 
 .hero-title {
     color: white;
-    font-size: 39px;
-    font-weight: 850;
-    line-height: 1.15;
-    margin-bottom: 8px;
+    font-size: clamp(34px, 4vw, 50px);
+    font-weight: 860;
+    line-height: 1.05;
+    letter-spacing: -1.25px;
+    margin-bottom: 10px;
+}
+
+.hero-title-accent {
+    color: #67E8F9;
 }
 
 .hero-subtitle {
-    color: #E0F2FE;
+    color: #DCEBFF;
     font-size: 15px;
+    line-height: 1.7;
+    max-width: 850px;
 }
 
+.hero-tech {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 20px;
+}
 
-/* Metric */
+.hero-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 7px 11px;
+    border-radius: 999px;
+    color: #E0F2FE;
+    background: rgba(255,255,255,.08);
+    border: 1px solid rgba(255,255,255,.12);
+    font-size: 11px;
+    font-weight: 700;
+    backdrop-filter: blur(8px);
+}
+
+.meta-strip {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 3px 0 20px 0;
+}
+
+.meta-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 7px 11px;
+    border-radius: 999px;
+    background: rgba(255,255,255,.78);
+    border: 1px solid #E3EAF4;
+    color: #475569;
+    font-size: 11px;
+    font-weight: 750;
+    box-shadow: 0 6px 18px rgba(15,23,42,.035);
+}
+
+.meta-pill strong {
+    color: #0F172A;
+}
+
 div[data-testid="stMetric"] {
-    background: white;
-    border: 1px solid #E2E8F0;
-    border-radius: 18px;
-    padding: 18px 20px;
-
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(180deg, rgba(255,255,255,.98), rgba(248,250,252,.98));
+    border: 1px solid #E4EAF3;
+    border-radius: 20px;
+    padding: 18px 20px 16px 20px;
     box-shadow:
-        0 7px 22px rgba(15,23,42,.055);
+        0 10px 28px rgba(15,23,42,.06),
+        inset 0 1px 0 rgba(255,255,255,.8);
+    transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+}
+
+div[data-testid="stMetric"]::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(90deg, #2563EB, #06B6D4);
+}
+
+div[data-testid="stMetric"]:hover {
+    transform: translateY(-2px);
+    border-color: #BFDBFE;
+    box-shadow: 0 16px 34px rgba(37,99,235,.10);
 }
 
 div[data-testid="stMetricLabel"] {
     color: #64748B;
-    font-weight: 650;
+    font-weight: 720;
+    letter-spacing: .1px;
 }
 
 div[data-testid="stMetricValue"] {
-    color: #0F172A;
-    font-weight: 850;
+    color: #0B1220;
+    font-weight: 860;
+    letter-spacing: -.7px;
 }
 
-
-/* Section */
 .section-title {
-    font-size: 27px;
-    font-weight: 850;
-    color: #0F172A;
+    font-size: 29px;
+    font-weight: 860;
+    letter-spacing: -.45px;
+    color: #0B1220;
     margin-top: 8px;
     margin-bottom: 3px;
 }
@@ -184,69 +321,130 @@ div[data-testid="stMetricValue"] {
     margin-bottom: 18px;
 }
 
-
-/* Question */
 .question {
-    color: #64748B;
-    font-size: 12px;
-    font-weight: 750;
-    margin-bottom: 3px;
+    display: inline-flex;
+    align-items: center;
+    padding: 5px 9px;
+    border-radius: 999px;
+    background: #EFF6FF;
+    border: 1px solid #DBEAFE;
+    color: #1D4ED8;
+    font-size: 10px;
+    font-weight: 850;
+    letter-spacing: .55px;
+    margin-bottom: 5px;
 }
 
-
-/* Insight */
 .insight {
+    position: relative;
     background:
-        linear-gradient(
-            120deg,
-            #ECFEFF,
-            #EEF2FF
-        );
-
-    border-left: 5px solid #06B6D4;
-    border-radius: 14px;
-
-    padding: 13px 17px;
+        linear-gradient(120deg, rgba(236,254,255,.95), rgba(239,246,255,.96));
+    border: 1px solid #CFFAFE;
+    border-radius: 16px;
+    padding: 14px 17px 14px 19px;
     margin: 8px 0 18px 0;
-
     color: #164E63;
+    box-shadow: 0 8px 22px rgba(6,182,212,.06);
 }
 
+.insight::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 14px;
+    bottom: 14px;
+    width: 4px;
+    border-radius: 999px;
+    background: linear-gradient(180deg, #06B6D4, #2563EB);
+}
 
-/* Plotly */
 div[data-testid="stPlotlyChart"] {
-    background: white;
-    border: 1px solid #E5E7EB;
-    border-radius: 18px;
-    padding: 7px;
-
+    background: rgba(255,255,255,.96);
+    border: 1px solid #E5EAF2;
+    border-radius: 20px;
+    padding: 9px;
     box-shadow:
-        0 5px 18px rgba(15,23,42,.045);
+        0 10px 26px rgba(15,23,42,.05),
+        inset 0 1px 0 rgba(255,255,255,.8);
 }
 
-
-/* Dataframe */
 div[data-testid="stDataFrame"] {
     border: 1px solid #E2E8F0;
-    border-radius: 15px;
+    border-radius: 17px;
     overflow: hidden;
+    box-shadow: 0 8px 20px rgba(15,23,42,.04);
 }
 
+div[data-baseweb="tab-list"] {
+    gap: 8px;
+    background: rgba(255,255,255,.72);
+    border: 1px solid #E5EAF2;
+    border-radius: 16px;
+    padding: 6px;
+    box-shadow: 0 8px 24px rgba(15,23,42,.045);
+}
 
-/* Tabs */
 button[data-baseweb="tab"] {
-    font-size: 14px;
-    font-weight: 700;
+    height: 42px;
+    border-radius: 11px;
+    padding-left: 15px !important;
+    padding-right: 15px !important;
+    color: #64748B;
+    font-size: 13px;
+    font-weight: 760;
 }
 
+button[data-baseweb="tab"][aria-selected="true"] {
+    background: linear-gradient(135deg, #EFF6FF, #ECFEFF);
+    color: #0F172A !important;
+}
 
-/* Download */
-.stDownloadButton button {
-    border-radius: 11px;
-    background: #ECFEFF;
+div[data-baseweb="tab-highlight"] {
+    background: linear-gradient(90deg, #2563EB, #06B6D4) !important;
+    height: 3px !important;
+    border-radius: 999px;
+}
+
+.stDownloadButton button,
+.stButton button {
+    border-radius: 12px;
+    border: 1px solid #BFDBFE;
+    background: linear-gradient(135deg, #EFF6FF, #ECFEFF);
     color: #155E75;
-    border: 1px solid #A5F3FC;
-    font-weight: 700;
+    font-weight: 760;
+    min-height: 42px;
+    transition: transform .16s ease, box-shadow .16s ease;
+}
+
+.stDownloadButton button:hover,
+.stButton button:hover {
+    transform: translateY(-1px);
+    border-color: #7DD3FC;
+    box-shadow: 0 8px 18px rgba(14,165,233,.10);
+}
+
+h1, h2, h3 {
+    letter-spacing: -.35px;
+}
+
+hr {
+    border-color: #E8EDF5 !important;
+}
+
+@media (max-width: 900px) {
+    .hero {
+        padding: 28px 24px;
+        border-radius: 22px;
+    }
+
+    .hero-title {
+        font-size: 34px;
+    }
+
+    .block-container {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
 }
 
 </style>
@@ -297,31 +495,40 @@ def style_chart(fig, height=420):
         template="plotly_white",
         height=height,
         margin=dict(
-            l=20,
-            r=20,
-            t=30,
-            b=20
+            l=22,
+            r=22,
+            t=34,
+            b=22
         ),
         paper_bgcolor="rgba(0,0,0,0)",
-        plot_bgcolor="#FFFFFF",
+        plot_bgcolor="rgba(255,255,255,0)",
         font=dict(
             color="#334155",
-            size=12
+            size=12,
+            family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif"
         ),
         hoverlabel=dict(
             bgcolor=NAVY,
-            font_color="white"
-        )
+            font_color="white",
+            bordercolor="rgba(255,255,255,.14)"
+        ),
+        hovermode="closest"
     )
 
     fig.update_xaxes(
-        gridcolor="#EEF2F7",
-        zeroline=False
+        gridcolor="#EDF2F7",
+        linecolor="#DCE4EE",
+        tickcolor="#DCE4EE",
+        zeroline=False,
+        showline=False
     )
 
     fig.update_yaxes(
-        gridcolor="#EEF2F7",
-        zeroline=False
+        gridcolor="#EDF2F7",
+        linecolor="#DCE4EE",
+        tickcolor="#DCE4EE",
+        zeroline=False,
+        showline=False
     )
 
     return fig
@@ -343,16 +550,40 @@ def display_chart(fig):
 
 hero_html = (
     '<div class="hero">'
-    '<div class="hero-small">AIRLINE DATA WAREHOUSE • DUCKDB • dbt</div>'
-    '<div class="hero-title">✈ Airline Intelligence Dashboard</div>'
+    '<div class="hero-kicker">'
+    '<span class="hero-kicker-dot"></span>'
+    'AIRLINE DATA WAREHOUSE • ANALYTICS EXPERIENCE'
+    '</div>'
+    '<div class="hero-title">'
+    'Airline <span class="hero-title-accent">Intelligence</span><br>Dashboard'
+    '</div>'
     '<div class="hero-subtitle">'
-    'วิเคราะห์ยอดขายตั๋ว • สนามบินและเส้นทาง • เครื่องบิน • การดำเนินงานเที่ยวบิน'
+    'วิเคราะห์ยอดขายตั๋ว เส้นทางบิน เครื่องบิน และประสิทธิภาพการดำเนินงาน '
+    'จาก Data Warehouse ในมุมมองเดียว'
+    '</div>'
+    '<div class="hero-tech">'
+    '<span class="hero-chip">DuckDB</span>'
+    '<span class="hero-chip">dbt</span>'
+    '<span class="hero-chip">Streamlit</span>'
+    '<span class="hero-chip">Plotly</span>'
     '</div>'
     '</div>'
 )
 
 st.markdown(
     hero_html,
+    unsafe_allow_html=True
+)
+
+st.markdown(
+    """
+    <div class="meta-strip">
+        <span class="meta-pill"><strong>15</strong> Business Questions</span>
+        <span class="meta-pill"><strong>3</strong> Fact Tables</span>
+        <span class="meta-pill"><strong>5</strong> Dimensions</span>
+        <span class="meta-pill">Direct <strong>DuckDB</strong> Connection</span>
+    </div>
+    """,
     unsafe_allow_html=True
 )
 
@@ -383,12 +614,17 @@ max_date = pd.to_datetime(
 # SIDEBAR — CASCADING FILTERS
 # =========================================================
 
+st.sidebar.markdown(
+    '<div class="sidebar-kicker">CONTROL CENTER</div>',
+    unsafe_allow_html=True
+)
+
 st.sidebar.title(
     "ตัวกรองข้อมูล"
 )
 
 st.sidebar.caption(
-    "ตัวเลือกจะเปลี่ยนตามข้อมูลที่มีอยู่จริง"
+    "เลือกเงื่อนไขเพื่อสำรวจข้อมูลแบบ Interactive — ตัวเลือกจะปรับตามข้อมูลที่มีอยู่จริง"
 )
 
 
@@ -914,7 +1150,7 @@ k1, k2, k3, k4 = st.columns(4)
 
 with k1:
     st.metric(
-        label="ยอดขายตั๋วรวม",
+        label="ยอดขายตั๋วรวม • Total Sales",
         value=compact_number(
             sales_kpi[0]
         )
@@ -923,27 +1159,27 @@ with k1:
 
 with k2:
     st.metric(
-        label="Ticket Flight",
+        label="จำนวน Ticket Flight",
         value=f"{sales_kpi[1]:,.0f}"
     )
 
 
 with k3:
     st.metric(
-        label="เที่ยวบินทั้งหมด",
+        label="เที่ยวบินทั้งหมด • Flights",
         value=f"{ops_kpi[0]:,.0f}"
     )
 
 
 with k4:
     st.metric(
-        label="ดีเลย์ขาออกเฉลี่ย",
+        label="ดีเลย์ขาออกเฉลี่ย • Avg Delay",
         value=f"{ops_kpi[1]:,.1f} นาที"
     )
 
 
 st.caption(
-    "Q1 ยอดขายตั๋วรวม • Q2 จำนวน Ticket Flight"
+    "Executive snapshot • KPI จะเปลี่ยนตามตัวกรองที่เลือก"
 )
 
 st.write("")
@@ -954,11 +1190,11 @@ st.write("")
 # =========================================================
 
 tab1, tab2, tab3, tab4, tab5 = st.tabs([
-    "ภาพรวมยอดขาย",
-    "สนามบินและเส้นทาง",
-    "เครื่องบิน",
-    "การดำเนินงาน",
-    "วิเคราะห์หลายมิติ"
+    "📈 ภาพรวม",
+    "🌐 เส้นทาง",
+    "✈️ เครื่องบิน",
+    "⏱️ การดำเนินงาน",
+    "🔎 วิเคราะห์หลายมิติ"
 ])
 
 
@@ -2551,7 +2787,7 @@ with tab5:
 st.divider()
 
 st.caption(
-    "Airline Data Warehouse Project • dbt • DuckDB • Streamlit • Plotly"
+    "Airline Intelligence Dashboard  •  Data Warehouse Analytics  •  dbt  •  DuckDB  •  Streamlit  •  Plotly"
 )
 
 con.close()
