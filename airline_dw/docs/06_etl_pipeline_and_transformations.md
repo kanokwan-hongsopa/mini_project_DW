@@ -1,168 +1,180 @@
-# 06 ETL Pipeline and Transformations
+# 06 กระบวนการ ETL Pipeline และการแปลงข้อมูล
 
-## 1. Overview
+## 1. ภาพรวม (Overview)
 
-The project uses an ELT-style pipeline to move airline
-operational data from CSV files into DuckDB and transform
-the raw data using dbt.
+โครงการนี้ใช้กระบวนการในรูปแบบ ELT เพื่อจัดการข้อมูลการดำเนินงานของสายการบิน โดยนำข้อมูลจากไฟล์ CSV เข้าสู่ฐานข้อมูล DuckDB และใช้ dbt ในการแปลงและจัดเตรียมข้อมูลดิบให้อยู่ในรูปแบบที่เหมาะสมสำหรับการสร้าง Data Warehouse และการวิเคราะห์ข้อมูล
 
-Pipeline:
+กระบวนการทำงานของข้อมูล (Pipeline) มีลำดับดังนี้:
 
-CSV Source Files
-→ DuckDB Raw Schema
-→ dbt Staging Models
-→ Dimension Tables
-→ Fact Tables
-→ Data Warehouse
+CSV Source Files  
+→ DuckDB Raw Schema  
+→ dbt Staging Models  
+→ Dimension Tables  
+→ Fact Tables  
+→ Data Warehouse  
 → Dashboard
 
 
-## 2. Extract
+## 2. การดึงและนำเข้าข้อมูล (Extract)
 
-The source data consists of eight operational CSV files:
+ข้อมูลต้นทางประกอบด้วยไฟล์ CSV จากฐานข้อมูลเชิงปฏิบัติการ (Operational Data) จำนวน 8 ไฟล์ ได้แก่:
 
-- aircrafts_data.csv
-- airports_data.csv
-- boarding_passes.csv
-- bookings.csv
-- flights.csv
-- seats.csv
-- ticket_flights.csv
-- tickets.csv
+- `aircrafts_data.csv`
+- `airports_data.csv`
+- `boarding_passes.csv`
+- `bookings.csv`
+- `flights.csv`
+- `seats.csv`
+- `ticket_flights.csv`
+- `tickets.csv`
 
-The Python script `scripts/load_raw.py` loads all CSV files
-into the `raw` schema of `dev.duckdb`.
+โปรเจกต์ใช้ Python script `scripts/load_raw.py` สำหรับโหลดข้อมูลจากไฟล์ CSV ทั้งหมดเข้าสู่ `raw` schema ภายในฐานข้อมูล `dev.duckdb`
 
-All source columns are initially loaded as VARCHAR using
-`read_csv_auto(..., all_varchar=true)`.
+ในขั้นตอนเริ่มต้น คอลัมน์ทั้งหมดจากข้อมูลต้นทางจะถูกโหลดเป็นชนิดข้อมูล `VARCHAR` โดยใช้:
 
+`read_csv_auto(..., all_varchar=true)`
 
-## 3. Raw Data Layer
-
-The raw schema preserves the source data before business
-transformations.
-
-Examples:
-
-- raw.flights
-- raw.airports_data
-- raw.aircrafts_data
-- raw.seats
-- raw.boarding_passes
+วิธีนี้ช่วยรักษาค่าของข้อมูลต้นทางไว้ก่อนที่จะเข้าสู่ขั้นตอนการทำความสะอาดและแปลงชนิดข้อมูลด้วย dbt
 
 
-## 4. Staging Transformations
+## 3. ชั้นข้อมูลดิบ (Raw Data Layer)
 
-### 4.1 stg_flights
+`raw` schema ใช้สำหรับเก็บรักษาข้อมูลต้นทางก่อนที่จะมีการแปลงข้อมูลตามกฎหรือความต้องการทางธุรกิจ
 
-Transformations include:
+ตัวอย่างตารางข้อมูลใน Raw Data Layer ได้แก่:
 
-- flight_id converted from VARCHAR to INTEGER
-- scheduled timestamps converted to TIMESTAMPTZ
-- actual timestamps converted to TIMESTAMPTZ
-- `\N` values converted to SQL NULL
-- airport codes standardized using TRIM and UPPER
-- aircraft codes standardized using TRIM and UPPER
-- flight status cleaned using TRIM
+- `raw.flights`
+- `raw.airports_data`
+- `raw.aircrafts_data`
+- `raw.seats`
+- `raw.boarding_passes`
 
-Missing actual departure and arrival values are retained
-as NULL because scheduled or cancelled flights may not have
-actual timestamps.
+ข้อมูลในชั้นนี้จึงทำหน้าที่เป็นข้อมูลตั้งต้นสำหรับกระบวนการ Staging และการแปลงข้อมูลในขั้นตอนถัดไป
 
 
-### 4.2 stg_airports
+## 4. การแปลงข้อมูลใน Staging Layer (Staging Transformations)
 
-Transformations include:
-
-- airport codes standardized to uppercase
-- whitespace removed from text attributes
-- airport master data retained at one row per airport code
+Staging Layer ใช้สำหรับทำความสะอาด ปรับรูปแบบ และแปลงชนิดข้อมูลจาก Raw Data ให้มีความเหมาะสมก่อนนำไปสร้าง Dimension Tables และ Fact Tables
 
 
-### 4.3 stg_aircrafts
+### 4.1 `stg_flights`
 
-Transformations include:
+การแปลงข้อมูลประกอบด้วย:
 
-- aircraft codes standardized to uppercase
-- model names trimmed
-- aircraft range converted from VARCHAR to INTEGER
+- แปลง `flight_id` จาก `VARCHAR` เป็น `INTEGER`
+- แปลงข้อมูลวันและเวลาตามกำหนดการ (scheduled timestamps) เป็น `TIMESTAMPTZ`
+- แปลงข้อมูลวันและเวลาที่เกิดขึ้นจริง (actual timestamps) เป็น `TIMESTAMPTZ`
+- แปลงค่า `\N` ให้เป็น SQL `NULL`
+- ปรับรูปแบบรหัสสนามบินด้วย `TRIM` และ `UPPER`
+- ปรับรูปแบบรหัสเครื่องบินด้วย `TRIM` และ `UPPER`
+- ทำความสะอาดข้อมูลสถานะเที่ยวบินด้วย `TRIM`
 
-
-### 4.4 stg_seats
-
-Transformations include:
-
-- aircraft codes standardized
-- seat numbers standardized
-- fare conditions cleaned
-- validation performed using the composite business key
-  aircraft_code + seat_no
+สำหรับข้อมูล `actual_departure` และ `actual_arrival` ที่ไม่มีค่า จะยังคงเก็บไว้เป็น `NULL` เนื่องจากเที่ยวบินที่อยู่ในสถานะ Scheduled หรือ Cancelled อาจยังไม่มีเวลาที่ออกเดินทางหรือเดินทางมาถึงจริง
 
 
-### 4.5 stg_boarding_passes
+### 4.2 `stg_airports`
 
-Transformations include:
+การแปลงข้อมูลประกอบด้วย:
 
-- flight_id converted to INTEGER
-- boarding_no converted to INTEGER
-- seat numbers standardized
-- duplicate validation performed using
-  ticket_no + flight_id
+- ปรับรหัสสนามบิน (`airport_code`) ให้เป็นตัวอักษรพิมพ์ใหญ่
+- ลบช่องว่างที่ไม่จำเป็นออกจากข้อมูลประเภทข้อความ
+- รักษาข้อมูลหลักของสนามบิน (Airport Master Data) ให้มีหนึ่งแถวต่อหนึ่งรหัสสนามบิน
 
 
-## 5. Data Quality Validation
+### 4.3 `stg_aircrafts`
 
-dbt tests are used to validate:
+การแปลงข้อมูลประกอบด้วย:
 
-- NOT NULL constraints
-- uniqueness of business keys
-- relationships between staging models
-- accepted flight status values
-- accepted fare class values
-
-Duplicate validation found no duplicate records for:
-
-- flights: flight_id
-- airports: airport_code
-- aircrafts: aircraft_code
-- seats: aircraft_code + seat_no
-- boarding passes: ticket_no + flight_id
+- ปรับรหัสเครื่องบิน (`aircraft_code`) ให้เป็นตัวอักษรพิมพ์ใหญ่
+- ลบช่องว่างที่ไม่จำเป็นออกจากชื่อรุ่นเครื่องบิน
+- แปลงข้อมูลระยะบิน (`range`) จาก `VARCHAR` เป็น `INTEGER`
 
 
-## 6. Load Process
+### 4.4 `stg_seats`
 
-After staging transformations are completed and validated,
-the cleaned data is used to build Dimension tables first.
+การแปลงข้อมูลประกอบด้วย:
 
-The Fact tables are then created using the Dimension keys.
+- ปรับรูปแบบรหัสเครื่องบินให้เป็นมาตรฐาน
+- ปรับรูปแบบหมายเลขที่นั่ง (`seat_no`) ให้เป็นมาตรฐาน
+- ทำความสะอาดข้อมูลประเภทชั้นโดยสาร (`fare_conditions`)
+- ตรวจสอบข้อมูลโดยใช้ Composite Business Key ได้แก่ `aircraft_code + seat_no`
 
-Load order:
 
-Raw
-→ Staging
-→ Dimensions
-→ Facts
+### 4.5 `stg_boarding_passes`
+
+การแปลงข้อมูลประกอบด้วย:
+
+- แปลง `flight_id` เป็น `INTEGER`
+- แปลง `boarding_no` เป็น `INTEGER`
+- ปรับรูปแบบหมายเลขที่นั่งให้เป็นมาตรฐาน
+- ตรวจสอบข้อมูลซ้ำโดยใช้ `ticket_no + flight_id` เป็น Business Key
+
+
+## 5. การตรวจสอบคุณภาพข้อมูล (Data Quality Validation)
+
+โปรเจกต์ใช้ dbt tests สำหรับตรวจสอบคุณภาพและความถูกต้องของข้อมูลใน Staging Layer โดยครอบคลุม:
+
+- การตรวจสอบค่า `NOT NULL`
+- การตรวจสอบความไม่ซ้ำกัน (Uniqueness) ของ Business Keys
+- การตรวจสอบความสัมพันธ์ระหว่าง Staging Models
+- การตรวจสอบค่าที่ยอมรับได้ของสถานะเที่ยวบิน (Accepted Flight Status Values)
+- การตรวจสอบค่าที่ยอมรับได้ของชั้นโดยสาร (Accepted Fare Class Values)
+
+มีการตรวจสอบข้อมูลซ้ำโดยใช้ Business Key ของแต่ละชุดข้อมูล ได้แก่:
+
+- Flights: `flight_id`
+- Airports: `airport_code`
+- Aircrafts: `aircraft_code`
+- Seats: `aircraft_code + seat_no`
+- Boarding Passes: `ticket_no + flight_id`
+
+จากการตรวจสอบ ไม่พบข้อมูลซ้ำตาม Business Keys ที่กำหนดไว้
+
+
+## 6. กระบวนการโหลดข้อมูล (Load Process)
+
+หลังจากข้อมูลผ่านกระบวนการแปลงและตรวจสอบคุณภาพใน Staging Layer แล้ว ข้อมูลที่ผ่านการทำความสะอาดจะถูกนำไปใช้ในการสร้าง Dimension Tables ก่อน
+
+จากนั้นจึงสร้าง Fact Tables โดยใช้ Keys ที่เชื่อมโยงกับ Dimension Tables
+
+ลำดับการโหลดข้อมูลมีดังนี้:
+
+Raw  
+→ Staging  
+→ Dimensions  
+→ Facts  
 → Analytics / Dashboard
 
-Loading Dimensions before Facts helps maintain referential
-integrity between Fact and Dimension tables.
+การสร้าง Dimension Tables ก่อน Fact Tables ช่วยให้สามารถรักษาความสัมพันธ์และ Referential Integrity ระหว่าง Fact Tables และ Dimension Tables ได้อย่างถูกต้อง
 
 
-## 7. Validation Commands
+## 7. คำสั่งสำหรับตรวจสอบ Pipeline (Validation Commands)
+
+ใช้คำสั่งต่อไปนี้ในการโหลดข้อมูล ตรวจสอบการเชื่อมต่อ สร้าง Models และทดสอบคุณภาพข้อมูล:
 
 ```bash
 python scripts/load_raw.py
 dbt debug
 dbt run
 dbt test
+```
 
-````markdown
+โดย:
+
+- `python scripts/load_raw.py` ใช้สำหรับโหลดข้อมูลจากไฟล์ CSV เข้าสู่ DuckDB Raw Schema
+- `dbt debug` ใช้ตรวจสอบการตั้งค่าและการเชื่อมต่อของ dbt
+- `dbt run` ใช้สร้างและประมวลผล dbt Models
+- `dbt test` ใช้ตรวจสอบคุณภาพและความถูกต้องของข้อมูลตาม Tests ที่กำหนดไว้
+
+
+## 8. แผนภาพกระบวนการ ETL/ELT Pipeline
+
 ```mermaid
 flowchart LR
-    A[CSV Operational Data]
+    A[ข้อมูลต้นทาง CSV]
     --> B[Python load_raw.py]
 
-    B --> C[DuckDB raw schema]
+    B --> C[DuckDB Raw Schema]
 
     C --> D[dbt Staging]
 
@@ -173,3 +185,6 @@ flowchart LR
     F --> G[Data Warehouse]
 
     G --> H[Interactive Dashboard]
+```
+
+แผนภาพแสดงลำดับการไหลของข้อมูลตั้งแต่ข้อมูลต้นทางในรูปแบบ CSV ผ่านกระบวนการโหลดข้อมูลด้วย Python เข้าสู่ DuckDB จากนั้นใช้ dbt ในการทำ Staging และแปลงข้อมูล ก่อนนำไปสร้าง Dimension Tables และ Fact Tables ภายใน Data Warehouse และนำข้อมูลที่ได้ไปใช้สำหรับการวิเคราะห์และแสดงผลผ่าน Interactive Dashboard
