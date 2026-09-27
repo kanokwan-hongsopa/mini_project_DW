@@ -1,27 +1,44 @@
 with all_dates as (
 
-    select cast(book_date as date) as full_date
+    select
+        cast(book_date as date) as full_date
     from {{ ref('stg_bookings') }}
 
     union
 
-    select cast(scheduled_departure as date) as full_date
+    select
+        cast(
+            substr(cast(scheduled_departure as varchar), 1, 10)
+            as date
+        ) as full_date
     from {{ ref('stg_flights') }}
 
     union
 
-    select cast(scheduled_arrival as date) as full_date
+    select
+        cast(
+            substr(cast(scheduled_arrival as varchar), 1, 10)
+            as date
+        ) as full_date
     from {{ ref('stg_flights') }}
 
     union
 
-    select cast(actual_departure as date) as full_date
+    select
+        cast(
+            substr(cast(actual_departure as varchar), 1, 10)
+            as date
+        ) as full_date
     from {{ ref('stg_flights') }}
     where actual_departure is not null
 
     union
 
-    select cast(actual_arrival as date) as full_date
+    select
+        cast(
+            substr(cast(actual_arrival as varchar), 1, 10)
+            as date
+        ) as full_date
     from {{ ref('stg_flights') }}
     where actual_arrival is not null
 
@@ -29,7 +46,8 @@ with all_dates as (
 
 unique_dates as (
 
-    select distinct full_date
+    select distinct
+        full_date
     from all_dates
     where full_date is not null
 

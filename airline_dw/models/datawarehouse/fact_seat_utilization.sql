@@ -15,7 +15,11 @@ final as (
         f.flight_id,
 
         cast(
-            strftime(cast(f.scheduled_departure as date), '%Y%m%d')
+            replace(
+                substr(cast(f.scheduled_departure as varchar), 1, 10),
+                '-',
+                ''
+            )
             as integer
         ) as date_key,
 

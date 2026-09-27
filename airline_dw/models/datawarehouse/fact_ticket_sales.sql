@@ -18,8 +18,14 @@ joined as (
         tf.ticket_no,
         tf.flight_id,
 
-        cast(strftime(cast(f.scheduled_departure as date), '%Y%m%d') as integer)
-            as date_key,
+        cast(
+            replace(
+                substr(cast(f.scheduled_departure as varchar), 1, 10),
+                '-',
+                ''
+            )
+            as integer
+        ) as date_key,
 
         da_departure.airport_key as departure_airport_key,
         da_arrival.airport_key as arrival_airport_key,
