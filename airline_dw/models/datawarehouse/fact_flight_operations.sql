@@ -22,34 +22,38 @@ final as (
         arr.airport_key as arrival_airport_key,
 
         ac.aircraft_key,
-
         fs.status_key,
 
+        -- เวลาเที่ยวบิน
         f.scheduled_departure,
         f.scheduled_arrival,
         f.actual_departure,
         f.actual_arrival,
 
-        case
-            when f.actual_departure is not null then
-                date_diff(
-                    'minute',
-                    f.scheduled_departure,
-                    f.actual_departure
-                )
-            else null
-        end as departure_delay_minutes,
+        -- เวลา Local / ช่วงเวลา
+        f.scheduled_departure_local,
+        f.scheduled_arrival_local,
+        f.departure_local_hour,
+        f.departure_daypart,
+        f.departure_is_weekend,
 
-        case
-            when f.actual_arrival is not null then
-                date_diff(
-                    'minute',
-                    f.scheduled_arrival,
-                    f.actual_arrival
-                )
-            else null
-        end as arrival_delay_minutes,
+        -- Duration
+        f.scheduled_duration_minutes,
+        f.actual_duration_minutes,
 
+        -- Delay
+        f.departure_delay_minutes,
+        f.arrival_delay_minutes,
+
+        -- Operational flags
+        f.scheduled_duration_over_2h,
+        f.departure_delay_over_2h,
+        f.arrival_delay_over_2h,
+
+        -- Passenger volume
+        f.boarded_count,
+
+        -- จำนวนเที่ยวบิน
         1 as flight_count
 
     from flights f
