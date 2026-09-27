@@ -43,7 +43,24 @@ models:
 
       - name: year
         data_tests:
-          - not_null  
+          - not_null
+
+      - name: is_weekend
+        description: "ระบุว่าวันนั้นเป็นวันหยุดสุดสัปดาห์หรือไม่"
+        data_tests:
+          - not_null
+
+      - name: day_type
+        description: "ประเภทวัน แบ่งเป็น Weekday หรือ Weekend"
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values:
+                  - Weekday
+                  - Weekend
+
+
   - name: dim_airport
     description: "Dimension ข้อมูลสนามบิน"
     columns:
@@ -65,9 +82,21 @@ models:
         data_tests:
           - not_null
 
+      - name: country
+        description: "ประเทศที่สนามบินตั้งอยู่"
+        data_tests:
+          - not_null
+
+      - name: analysis_region
+        description: "ภูมิภาคที่ใช้สำหรับการวิเคราะห์"
+        data_tests:
+          - not_null
+
       - name: timezone
         data_tests:
           - not_null
+
+
   - name: dim_aircraft
     description: "Dimension ข้อมูลรุ่นเครื่องบิน"
     columns:
@@ -85,9 +114,16 @@ models:
         data_tests:
           - not_null
 
+      - name: manufacturer
+        description: "บริษัทผู้ผลิตเครื่องบิน เช่น Boeing, Airbus"
+        data_tests:
+          - not_null
+
       - name: range
         data_tests:
           - not_null
+
+
   - name: dim_fare_class
     description: "Dimension ประเภทชั้นโดยสาร"
     columns:
@@ -106,6 +142,8 @@ models:
                   - Business
                   - Comfort
                   - Economy
+
+
   - name: dim_flight_status
     description: "Dimension สถานะเที่ยวบิน"
     columns:
@@ -127,6 +165,8 @@ models:
                   - Cancelled
                   - Departed
                   - Delayed
+
+
   - name: fact_ticket_sales
     description: "Fact table for ticket sales at ticket-flight segment grain"
     columns:
