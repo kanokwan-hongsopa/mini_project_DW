@@ -2,7 +2,7 @@ import duckdb
 from pathlib import Path
 
 DB_PATH = "dev.duckdb"
-DATA_DIR = Path("datasetss")
+DATA_DIR = Path("datasets")
 
 tables = {
     "aircrafts_data": "aircrafts_data.csv",

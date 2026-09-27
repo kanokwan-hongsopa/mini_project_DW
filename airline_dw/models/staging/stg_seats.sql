@@ -8,15 +8,12 @@ with source as (
 cleaned as (
 
     select
-        upper(trim(cast(aircraft_code as varchar)))
-            as aircraft_code,
-
-        upper(trim(cast(seat_no as varchar)))
-            as seat_no,
-
-        trim(cast(fare_conditions as varchar))
-            as fare_conditions
-
+        upper(trim(cast(aircraft_code as varchar))) as aircraft_code,
+        upper(trim(cast(seat_no as varchar))) as seat_no,
+        trim(cast(fare_conditions as varchar)) as fare_conditions,
+        trim(cast(aircraft_model as varchar)) as aircraft_model,
+        trim(cast(manufacturer as varchar)) as manufacturer,
+        cast(total_seat_capacity as integer) as total_seat_capacity
     from source
 
 )
