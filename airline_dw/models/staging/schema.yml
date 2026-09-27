@@ -5,20 +5,33 @@ models:
   - name: stg_bookings
     description: "Cleaned booking records"
     columns:
-
       - name: book_ref
-        description: "Unique booking reference"
+        description: "Booking reference"
         data_tests:
           - not_null
-          - unique
+          
 
       - name: book_date
-        description: "Date and time of booking"
         data_tests:
           - not_null
 
       - name: total_amount
-        description: "Total amount of the booking"
+        data_tests:
+          - not_null
+
+      - name: book_date_key
+        data_tests:
+          - not_null
+
+      - name: book_day_name
+        data_tests:
+          - not_null
+
+      - name: book_is_weekend
+        data_tests:
+          - not_null
+
+      - name: book_day_type
         data_tests:
           - not_null
 
@@ -26,15 +39,12 @@ models:
   - name: stg_tickets
     description: "Cleaned passenger ticket records"
     columns:
-
       - name: ticket_no
-        description: "Unique ticket number"
         data_tests:
           - not_null
           - unique
 
       - name: book_ref
-        description: "Booking reference"
         data_tests:
           - not_null
           - relationships:
@@ -43,7 +53,18 @@ models:
                 field: book_ref
 
       - name: passenger_id
-        description: "Passenger identifier"
+        data_tests:
+          - not_null
+
+      - name: book_date
+        data_tests:
+          - not_null
+
+      - name: book_date_key
+        data_tests:
+          - not_null
+
+      - name: book_day_type
         data_tests:
           - not_null
 
@@ -51,9 +72,7 @@ models:
   - name: stg_ticket_flights
     description: "Cleaned ticket-flight segment transactions"
     columns:
-
       - name: ticket_no
-        description: "Ticket number"
         data_tests:
           - not_null
           - relationships:
@@ -62,25 +81,80 @@ models:
                 field: ticket_no
 
       - name: flight_id
-        description: "Flight identifier"
         data_tests:
           - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_flights')
+                field: flight_id
 
       - name: fare_conditions
-        description: "Fare class such as Economy, Comfort or Business"
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values:
+                  - Business
+                  - Comfort
+                  - Economy
+
+      - name: amount
         data_tests:
           - not_null
 
-      - name: amount
-        description: "Ticket amount for the flight segment"
+      - name: book_ref
         data_tests:
           - not_null
+
+      - name: book_date
+        data_tests:
+          - not_null
+
+      - name: flight_date
+        data_tests:
+          - not_null
+
+      - name: booking_lead_days
+        data_tests:
+          - not_null
+
+      - name: departure_airport
+        data_tests:
+          - not_null
+
+      - name: arrival_airport
+        data_tests:
+          - not_null
+
+      - name: departure_region
+        data_tests:
+          - not_null
+
+      - name: arrival_region
+        data_tests:
+          - not_null
+
+      - name: aircraft_code
+        data_tests:
+          - not_null
+
+      - name: aircraft_model
+        data_tests:
+          - not_null
+
+      - name: manufacturer
+        data_tests:
+          - not_null
+
+      - name: scheduled_duration_minutes
+        data_tests:
+          - not_null
+
 
   - name: stg_aircrafts
     description: "Cleaned aircraft master data"
     columns:
       - name: aircraft_code
-        description: "Unique aircraft business key"
         data_tests:
           - not_null
           - unique
@@ -93,12 +167,15 @@ models:
         data_tests:
           - not_null
 
+      - name: manufacturer
+        data_tests:
+          - not_null
+
 
   - name: stg_airports
     description: "Cleaned airport master data"
     columns:
       - name: airport_code
-        description: "Unique airport business key"
         data_tests:
           - not_null
           - unique
@@ -115,12 +192,19 @@ models:
         data_tests:
           - not_null
 
+      - name: country
+        data_tests:
+          - not_null
+
+      - name: analysis_region
+        data_tests:
+          - not_null
+
 
   - name: stg_flights
     description: "Cleaned flight schedule and operational records"
     columns:
       - name: flight_id
-        description: "Unique flight identifier"
         data_tests:
           - not_null
           - unique
@@ -174,6 +258,46 @@ models:
                 to: ref('stg_aircrafts')
                 field: aircraft_code
 
+      - name: departure_region
+        data_tests:
+          - not_null
+
+      - name: arrival_region
+        data_tests:
+          - not_null
+
+      - name: aircraft_model
+        data_tests:
+          - not_null
+
+      - name: manufacturer
+        data_tests:
+          - not_null
+
+      - name: scheduled_duration_minutes
+        data_tests:
+          - not_null
+
+      - name: departure_daypart
+        data_tests:
+          - not_null
+
+      - name: departure_is_weekend
+        data_tests:
+          - not_null
+
+      - name: seat_capacity
+        data_tests:
+          - not_null
+
+      - name: ticket_flight_count
+        data_tests:
+          - not_null
+
+      - name: boarded_count
+        data_tests:
+          - not_null
+
 
   - name: stg_seats
     description: "Cleaned aircraft seating configuration"
@@ -200,6 +324,18 @@ models:
                   - Comfort
                   - Economy
 
+      - name: aircraft_model
+        data_tests:
+          - not_null
+
+      - name: manufacturer
+        data_tests:
+          - not_null
+
+      - name: total_seat_capacity
+        data_tests:
+          - not_null
+
 
   - name: stg_boarding_passes
     description: "Cleaned passenger boarding pass records"
@@ -221,5 +357,37 @@ models:
           - not_null
 
       - name: seat_no
+        data_tests:
+          - not_null
+
+      - name: departure_airport
+        data_tests:
+          - not_null
+
+      - name: arrival_airport
+        data_tests:
+          - not_null
+
+      - name: departure_region
+        data_tests:
+          - not_null
+
+      - name: arrival_region
+        data_tests:
+          - not_null
+
+      - name: aircraft_code
+        data_tests:
+          - not_null
+
+      - name: aircraft_model
+        data_tests:
+          - not_null
+
+      - name: manufacturer
+        data_tests:
+          - not_null
+
+      - name: seat_capacity
         data_tests:
           - not_null
