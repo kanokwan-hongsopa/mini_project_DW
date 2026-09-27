@@ -18,20 +18,29 @@ Airline Data Warehouse ถูกออกแบบในรูปแบบ **Gal
 
 1. `fact_ticket_sales`
 2. `fact_flight_operations`
-3. `fact_seat_inventory`
+3. `fact_seat_utilization`
 
-การออกแบบนี้ช่วยให้สามารถวิเคราะห์ข้อมูลได้หลายมุมมอง เช่น
+การออกแบบใหม่นี้รองรับการวิเคราะห์ข้อมูลได้หลายมุมมองมากขึ้น เช่น
 
-- ยอดขายตั๋ว
+- รายได้จากการขายตั๋ว
 - จำนวน Ticket Flight
-- ช่วงเวลา
+- แนวโน้มรายได้ตามช่วงเวลา
 - สนามบินต้นทางและปลายทาง
 - เส้นทางการบิน
-- ชั้นโดยสาร
+- ภูมิภาคต้นทางและปลายทาง
+- วันธรรมดาและวันหยุดสุดสัปดาห์
+- ช่วงเวลาของวัน
+- ประเภทชั้นโดยสาร
 - รุ่นเครื่องบิน
+- บริษัทผู้ผลิตเครื่องบิน
 - สถานะเที่ยวบิน
+- ระยะเวลาของเที่ยวบิน
 - ความล่าช้าของเที่ยวบิน
-- จำนวนและสัดส่วนที่นั่ง
+- จำนวนที่นั่งทั้งหมด
+- จำนวนตั๋วที่ขาย
+- จำนวนผู้โดยสารที่ขึ้นเครื่อง
+- อัตราการใช้ที่นั่ง
+- รูปแบบการจองตั๋วล่วงหน้า
 
 ---
 
@@ -42,14 +51,14 @@ Airline Data Warehouse ถูกออกแบบในรูปแบบ **Gal
 **ชื่อ Model:** `dim_date`
 
 **วัตถุประสงค์:**  
-ใช้สำหรับการวิเคราะห์ข้อมูลตามช่วงเวลา เช่น วัน สัปดาห์ เดือน ไตรมาส และปี
+ใช้สำหรับการวิเคราะห์ข้อมูลตามช่วงเวลา เช่น วัน สัปดาห์ เดือน ไตรมาส และปี รวมถึงการเปรียบเทียบข้อมูลระหว่างวันธรรมดาและวันหยุดสุดสัปดาห์
 
 **Grain:**  
 1 แถวแทน 1 วันที่
 
 | Attribute | รายละเอียด |
 |---|---|
-| date_key | Surrogate Key ของวันที่ |
+| date_key | Surrogate Key ของวันที่ในรูปแบบ YYYYMMDD |
 | full_date | วันที่เต็ม |
 | day | วันที่ของเดือน |
 | day_name | ชื่อวัน |
@@ -58,6 +67,8 @@ Airline Data Warehouse ถูกออกแบบในรูปแบบ **Gal
 | month_name | ชื่อเดือน |
 | quarter | ไตรมาส |
 | year | ปี |
+| is_weekend | ระบุว่าวันดังกล่าวเป็นวันหยุดสุดสัปดาห์หรือไม่ |
+| day_type | ประเภทวัน ได้แก่ Weekday หรือ Weekend |
 
 ### Hierarchy
 
@@ -69,6 +80,13 @@ Hierarchy นี้สามารถใช้สำหรับการ Roll-u
 
 ตัวอย่างเช่น จากข้อมูลระดับปี สามารถเจาะลงไปเป็นไตรมาส เดือน และวันที่ได้ตามลำดับ
 
+นอกจากนี้ `day_type` ยังช่วยให้สามารถเปรียบเทียบพฤติกรรมการเดินทางระหว่าง
+
+- Weekday
+- Weekend
+
+ได้อีกด้วย
+
 ---
 
 ## 2.2 DIM_AIRPORT
@@ -76,7 +94,7 @@ Hierarchy นี้สามารถใช้สำหรับการ Roll-u
 **ชื่อ Model:** `dim_airport`
 
 **วัตถุประสงค์:**  
-ใช้สำหรับวิเคราะห์ข้อมูลตามสนามบินต้นทาง สนามบินปลายทาง และเส้นทางการบิน
+ใช้สำหรับวิเคราะห์ข้อมูลตามสนามบินต้นทาง สนามบินปลายทาง เมือง ประเทศ ภูมิภาค และเส้นทางการบิน
 
 **Grain:**  
 1 แถวแทน 1 สนามบิน
@@ -87,6 +105,8 @@ Hierarchy นี้สามารถใช้สำหรับการ Roll-u
 | airport_code | รหัสสนามบิน |
 | airport_name | ชื่อสนามบิน |
 | city | เมืองที่สนามบินตั้งอยู่ |
+| country | ประเทศที่สนามบินตั้งอยู่ |
+| analysis_region | ภูมิภาคที่ใช้สำหรับการวิเคราะห์ |
 | coordinates | พิกัดของสนามบิน |
 | timezone | เขตเวลาของสนามบิน |
 
@@ -94,9 +114,11 @@ Hierarchy นี้สามารถใช้สำหรับการ Roll-u
 
 สามารถใช้ข้อมูลในระดับ
 
-**City → Airport**
+**Country → Analysis Region → City → Airport**
 
-เพื่อวิเคราะห์ข้อมูลจากระดับเมืองลงไปถึงสนามบินแต่ละแห่ง
+เพื่อทำการ Roll-up และ Drill-down จากภาพรวมระดับประเทศหรือภูมิภาคไปจนถึงสนามบินแต่ละแห่ง
+
+`analysis_region` เป็นกลุ่มภูมิภาคที่ใช้สำหรับการวิเคราะห์จากข้อมูลที่จัดเตรียมไว้ใน Dataset และไม่ควรตีความโดยอัตโนมัติว่าเป็นเขตการปกครองอย่างเป็นทางการ
 
 ### Role-Playing Dimension
 
@@ -110,7 +132,9 @@ Hierarchy นี้สามารถใช้สำหรับการ Roll-u
 - `departure_airport_key` → `dim_airport.airport_key`
 - `arrival_airport_key` → `dim_airport.airport_key`
 
-ทำให้สามารถวิเคราะห์ข้อมูลทั้งในมุมของสนามบินต้นทางและสนามบินปลายทางได้โดยไม่จำเป็นต้องสร้าง Dimension แยกออกเป็นสองตาราง
+ดังนั้นจึงไม่จำเป็นต้องสร้าง Physical Dimension แยกเป็น `dim_departure_airport` และ `dim_arrival_airport`
+
+แนวทางนี้ช่วยลดความซ้ำซ้อนของข้อมูล และยังสามารถวิเคราะห์สนามบินในบทบาทต้นทางและปลายทางได้อย่างชัดเจน
 
 ---
 
@@ -119,7 +143,7 @@ Hierarchy นี้สามารถใช้สำหรับการ Roll-u
 **ชื่อ Model:** `dim_aircraft`
 
 **วัตถุประสงค์:**  
-ใช้สำหรับวิเคราะห์ข้อมูลตามรุ่นและคุณลักษณะของเครื่องบิน
+ใช้สำหรับวิเคราะห์ข้อมูลตามรุ่นเครื่องบิน บริษัทผู้ผลิต และคุณลักษณะของเครื่องบิน
 
 **Grain:**  
 1 แถวแทน 1 Aircraft Code
@@ -129,15 +153,32 @@ Hierarchy นี้สามารถใช้สำหรับการ Roll-u
 | aircraft_key | Surrogate Key ของเครื่องบิน |
 | aircraft_code | รหัสเครื่องบิน |
 | model | รุ่นของเครื่องบิน |
+| manufacturer | บริษัทผู้ผลิตเครื่องบิน |
 | range | ระยะทางสูงสุดที่เครื่องบินสามารถบินได้ |
 
-Dimension นี้ถูกใช้งานร่วมกันระหว่าง
+ตัวอย่างบริษัทผู้ผลิตในข้อมูล เช่น
 
-- `fact_ticket_sales`
-- `fact_flight_operations`
-- `fact_seat_inventory`
+- Boeing
+- Airbus
+- Sukhoi
+- Cessna
+- Bombardier
 
-จึงสามารถใช้วิเคราะห์ข้อมูลทั้งยอดขาย จำนวนเที่ยวบิน และจำนวนที่นั่งตามรุ่นเครื่องบินได้
+### Hierarchy
+
+สามารถวิเคราะห์ข้อมูลในระดับ
+
+**Manufacturer → Aircraft Model / Aircraft Code**
+
+ตัวอย่างเช่น สามารถเริ่มจากการวิเคราะห์จำนวนเที่ยวบินของ Boeing และ Airbus แล้ว Drill-down ลงไปดูแต่ละ Model ได้
+
+Dimension นี้สามารถถูกใช้งานร่วมกับ Fact ที่เกี่ยวข้องกับ
+
+- การขายตั๋ว
+- การดำเนินงานของเที่ยวบิน
+- การใช้ Capacity ของเครื่องบิน
+
+ทำให้สามารถเปรียบเทียบการใช้งานเครื่องบินแต่ละ Manufacturer และ Model ได้
 
 ---
 
@@ -162,12 +203,13 @@ Fare Class ที่ใช้ในระบบ ได้แก่
 - Comfort
 - Economy
 
-Dimension นี้ถูกใช้งานร่วมกันระหว่าง
+Dimension นี้สามารถใช้ร่วมกับข้อมูล Ticket Sales เพื่อวิเคราะห์
 
-- `fact_ticket_sales`
-- `fact_seat_inventory`
-
-ทำให้สามารถวิเคราะห์ทั้งยอดขายตั๋วและโครงสร้างที่นั่งตาม Fare Class ได้
+- รายได้ตาม Fare Class
+- จำนวน Ticket Flight ตาม Fare Class
+- สัดส่วนรายได้ของแต่ละ Fare Class
+- รูปแบบการจองล่วงหน้าในแต่ละ Fare Class
+- Route × Fare Class
 
 ---
 
@@ -176,7 +218,7 @@ Dimension นี้ถูกใช้งานร่วมกันระหว�
 **ชื่อ Model:** `dim_flight_status`
 
 **วัตถุประสงค์:**  
-ใช้สำหรับจำแนกสถานะของเที่ยวบิน
+ใช้สำหรับจำแนกสถานะด้านการดำเนินงานของเที่ยวบิน หรือ **Operational Flight Status**
 
 **Grain:**  
 1 แถวแทน 1 Flight Status
@@ -186,7 +228,7 @@ Dimension นี้ถูกใช้งานร่วมกันระหว�
 | status_key | Surrogate Key ของสถานะเที่ยวบิน |
 | status_name | ชื่อสถานะเที่ยวบิน |
 
-ตัวอย่างสถานะเที่ยวบินที่ใช้ในการวิเคราะห์ ได้แก่
+สถานะเที่ยวบินที่รองรับในระบบ ได้แก่
 
 - Arrived
 - Scheduled
@@ -195,7 +237,16 @@ Dimension นี้ถูกใช้งานร่วมกันระหว�
 - Departed
 - Delayed
 
-Dimension นี้เชื่อมกับ `fact_flight_operations` เพื่อใช้วิเคราะห์จำนวนเที่ยวบินตามสถานะ
+`dim_flight_status` เป็น Dimension สำหรับจำแนกประเภทของสถานะเที่ยวบิน และแตกต่างจาก Measure ด้านความล่าช้า
+
+ตัวอย่างเช่น
+
+- `status_name = Delayed`
+- `departure_delay_minutes = 125`
+
+โดย `Delayed` เป็น Dimension Value ส่วน `125 นาที` เป็น Measure ที่ใช้บอกระดับความล่าช้า
+
+Dimension นี้เชื่อมกับ `fact_flight_operations` เพื่อใช้วิเคราะห์การดำเนินงานของเที่ยวบินตามสถานะ
 
 ---
 
@@ -228,26 +279,26 @@ Dimension นี้เชื่อมกับ `fact_flight_operations` เพ�
 | ticket_no | หมายเลขตั๋ว |
 | flight_id | รหัสเที่ยวบิน |
 
-### Measures
+### Measures / Analytical Attributes
 
-| Measure | ความหมาย | Measure Type |
+| Attribute | ความหมาย | ประเภท |
 |---|---|---|
-| amount | ยอดขายตั๋วของ Ticket Flight Segment | Additive |
-| ticket_flight_count | จำนวน Ticket Flight โดยแต่ละแถวมีค่า 1 | Additive |
+| amount | ยอดขายตั๋วของ Ticket Flight Segment | Additive Measure |
+| ticket_flight_count | จำนวน Ticket Flight โดยแต่ละแถวมีค่า 1 | Additive Measure |
+| booking_lead_days | จำนวนวันที่มีการจองล่วงหน้าก่อนวันเดินทาง | Analytical Attribute |
 
 ### การวิเคราะห์ที่รองรับ
 
 Fact Table นี้สามารถใช้ตอบคำถาม เช่น
 
-- ยอดขายตั๋วรวม
-- จำนวน Ticket Flight
-- ยอดขายตาม Fare Class
-- จำนวน Ticket Flight ตาม Fare Class
-- ยอดขายตามช่วงเวลา
-- สนามบินต้นทางยอดนิยม
-- สนามบินปลายทางยอดนิยม
-- เส้นทางที่มี Ticket Flight มากที่สุด
-- เส้นทางที่สร้างยอดขายสูงที่สุด
+- เส้นทางใดสร้างรายได้จากการขายตั๋วสูงที่สุด
+- Fare Class ใดสร้างรายได้สูงที่สุด
+- Fare Class แต่ละประเภทมีสัดส่วนรายได้เท่าใด
+- รายได้มีแนวโน้มเปลี่ยนแปลงอย่างไรในแต่ละเดือน
+- ภูมิภาคต้นทาง–ปลายทางคู่ใดมี Demand สูง
+- ผู้โดยสารมักจองตั๋วล่วงหน้ากี่วัน
+- รูปแบบการจองล่วงหน้าแตกต่างกันอย่างไรตาม Fare Class
+- Route × Fare Class ใดสร้างรายได้สูงแม้จำนวนตั๋วไม่สูง
 
 ---
 
@@ -278,64 +329,124 @@ Fact Table นี้สามารถใช้ตอบคำถาม เช�
 
 ### Operational Attributes
 
+ข้อมูลสำหรับการวิเคราะห์การดำเนินงานของเที่ยวบินประกอบด้วย เช่น
+
 - `scheduled_departure`
 - `scheduled_arrival`
 - `actual_departure`
 - `actual_arrival`
+- `departure_daypart`
+- `departure_is_weekend`
 
 ### Measures
 
 | Measure | ความหมาย | Measure Type |
 |---|---|---|
-| departure_delay_minutes | จำนวนนาทีที่เที่ยวบินออกเดินทางล่าช้า | Non-Additive |
-| arrival_delay_minutes | จำนวนนาทีที่เที่ยวบินเดินทางถึงล่าช้า | Non-Additive |
 | flight_count | จำนวนเที่ยวบิน โดยแต่ละแถวมีค่า 1 | Additive |
+| scheduled_duration_minutes | ระยะเวลาเดินทางตามตาราง | Non-Additive |
+| actual_duration_minutes | ระยะเวลาเดินทางจริง | Non-Additive |
+| departure_delay_minutes | จำนวนนาทีที่ออกเดินทางล่าช้า | Non-Additive |
+| arrival_delay_minutes | จำนวนนาทีที่เดินทางถึงล่าช้า | Non-Additive |
 
-Measure ประเภท Delay เหมาะกับการวิเคราะห์ด้วยค่าเฉลี่ย เช่น `AVG()` มากกว่าการนำค่ามารวมด้วย `SUM()`
+### Flags
+
+สามารถมี Operational Flags เช่น
+
+- `scheduled_duration_over_2h`
+- `departure_delay_over_2h`
+- `arrival_delay_over_2h`
+
+เพื่อแยกเที่ยวบินที่มี Duration หรือ Delay สูงกว่า 2 ชั่วโมงออกจากเที่ยวบินทั่วไป
+
+### การ Aggregate Delay
+
+Measure ประเภท Delay ไม่ควรนำค่ามารวมด้วย `SUM()` เพื่อใช้ตีความโดยตรง
+
+ควรวิเคราะห์ด้วยค่าเฉลี่ย เช่น
+
+`AVG(departure_delay_minutes)`
+
+หรือ
+
+`AVG(arrival_delay_minutes)`
+
+เพื่อเปรียบเทียบระดับความล่าช้าในแต่ละ Route, Region หรือ Daypart
 
 ### การวิเคราะห์ที่รองรับ
 
 Fact Table นี้สามารถใช้ตอบคำถาม เช่น
 
-- Aircraft Model ใดถูกใช้กับเที่ยวบินมากที่สุด
-- Flight Status แต่ละประเภทมีจำนวนเที่ยวบินเท่าใด
-- สนามบินต้นทางใดมีเที่ยวบินล่าช้าเฉลี่ยมากที่สุด
+- ช่วงเวลาใดของวันมีจำนวนเที่ยวบินมากที่สุด
+- Weekday และ Weekend มีจำนวนเที่ยวบินแตกต่างกันอย่างไร
+- Aircraft Manufacturer และ Model ใดถูกใช้งานมากที่สุด
+- Route ใดมี Departure Delay และ Arrival Delay เฉลี่ยสูง
+- Region × Daypart ใดมีความล่าช้าเฉลี่ยสูง
+- มีเที่ยวบินที่ Delay มากกว่า 2 ชั่วโมงจำนวนเท่าใด
 
 ---
 
-## 3.3 FACT_SEAT_INVENTORY
+## 3.3 FACT_SEAT_UTILIZATION
 
-**ชื่อ Model:** `fact_seat_inventory`
+**ชื่อ Model:** `fact_seat_utilization`
+
+Fact นี้ถูกออกแบบใหม่จากแนวคิดเดิมของ `fact_seat_inventory` เพื่อให้สามารถวิเคราะห์การใช้ Capacity ของเที่ยวบินได้จริง และลดความซ้ำซ้อนกับข้อมูล Ticket Sales
 
 ### Grain
 
-1 แถวแทน **1 Aircraft × 1 Fare Class**
-
-จำนวนที่นั่งถูก Aggregate จากข้อมูลที่นั่งตาม Aircraft และ Fare Class
+1 แถวแทน **1 เที่ยวบิน**
 
 ### Dimension Keys
 
+Dimension Key ที่สามารถใช้ร่วมกับ Fact นี้ ได้แก่
+
 | Foreign Key | Dimension |
 |---|---|
+| date_key | dim_date |
+| departure_airport_key | dim_airport |
+| arrival_airport_key | dim_airport |
 | aircraft_key | dim_aircraft |
-| fare_class_key | dim_fare_class |
 
 ### Measures
 
 | Measure | ความหมาย | Measure Type |
 |---|---|---|
-| seat_count | จำนวนที่นั่งของ Aircraft ใน Fare Class นั้น | Additive |
+| seat_capacity | จำนวนที่นั่งทั้งหมดที่เครื่องบินสามารถรองรับได้ | Additive ตาม Grain ที่เหมาะสม |
+| ticket_flight_count | จำนวน Ticket Flight ของเที่ยวบิน | Additive |
+| boarded_count | จำนวนผู้โดยสารที่มี Boarding Pass / ขึ้นเครื่องตามข้อมูล | Additive |
+| available_seats | จำนวนที่นั่งที่ยังไม่ถูกใช้งาน | Additive |
+| ticketed_load_pct | อัตราการใช้ Capacity เมื่อพิจารณาจาก Ticket | Non-Additive |
+| boarded_load_pct | อัตราการใช้ Capacity เมื่อพิจารณาจากผู้โดยสารที่ขึ้นเครื่องจริง | Non-Additive |
+
+### available_seats
+
+สามารถคำนวณจาก
+
+`seat_capacity - boarded_count`
+
+### ความแตกต่างจาก Fact อื่น
+
+`fact_ticket_sales`
+
+→ วิเคราะห์ด้านการขายและรายได้
+
+`fact_flight_operations`
+
+→ วิเคราะห์ด้านเวลา สถานะ และการดำเนินงาน
+
+`fact_seat_utilization`
+
+→ วิเคราะห์ด้าน Capacity และการใช้ที่นั่ง
+
+การแยก Business Process ดังกล่าวช่วยให้ Fact Table ทั้ง 3 ตารางมีหน้าที่ชัดเจนและไม่ซ้ำกัน
 
 ### การวิเคราะห์ที่รองรับ
 
 Fact Table นี้สามารถใช้ตอบคำถาม เช่น
 
-- Aircraft Model แต่ละรุ่นมีจำนวนที่นั่งเท่าใด
-- Aircraft Model แต่ละรุ่นมีสัดส่วนที่นั่งแต่ละ Fare Class อย่างไร
-
-### หมายเหตุ
-
-Fact Table นี้ไม่มี Date Dimension เนื่องจากข้อมูลที่นั่งเป็นข้อมูลโครงสร้างของ Aircraft และไม่ได้เป็นเหตุการณ์ที่เกิดขึ้นตามช่วงเวลา
+- Route ใดมีอัตราการใช้ที่นั่งจริงสูงหรือต่ำ
+- จำนวน Ticket ที่ขายกับจำนวนผู้โดยสารที่ขึ้นเครื่องจริงแตกต่างกันมากเพียงใด
+- Region × Aircraft Manufacturer/Model ใดมีอัตราการใช้ที่นั่งสูง
+- Route × Time ใดมี Demand สูงและ Load สูงจนใกล้เต็ม
 
 ---
 
@@ -343,21 +454,23 @@ Fact Table นี้ไม่มี Date Dimension เนื่องจาก�
 
 เนื่องจาก Data Warehouse นี้เป็น Galaxy Schema จึงมี Dimension ที่ถูกใช้ร่วมกันระหว่างหลาย Fact Table
 
-| Dimension | fact_ticket_sales | fact_flight_operations | fact_seat_inventory |
+| Dimension | fact_ticket_sales | fact_flight_operations | fact_seat_utilization |
 |---|:---:|:---:|:---:|
-| dim_date | ✓ | ✓ | - |
-| dim_airport | ✓ | ✓ | - |
+| dim_date | ✓ | ✓ | ✓ |
+| dim_airport | ✓ | ✓ | ✓ |
 | dim_aircraft | ✓ | ✓ | ✓ |
-| dim_fare_class | ✓ | - | ✓ |
+| dim_fare_class | ✓ | - | - |
 | dim_flight_status | - | ✓ | - |
 
 การใช้ Shared Dimension ทำให้ Fact Table หลายตารางสามารถวิเคราะห์ข้อมูลภายใต้มุมมองเดียวกันได้
 
-ตัวอย่างเช่น `dim_aircraft` ถูกใช้ร่วมกันในทั้ง 3 Fact Table จึงสามารถนำมาใช้เปรียบเทียบข้อมูลระหว่าง
+ตัวอย่างเช่น `dim_aircraft` สามารถใช้ร่วมกันเพื่อเปรียบเทียบ
 
-- ยอดขายตั๋วตาม Aircraft
+- รายได้ตาม Aircraft
 - จำนวนเที่ยวบินตาม Aircraft
-- จำนวนที่นั่งตาม Aircraft
+- Capacity และ Load ตาม Aircraft
+
+และ `dim_airport` สามารถทำหน้าที่เป็นทั้ง Departure Airport และ Arrival Airport ในหลาย Fact Table
 
 ---
 
@@ -367,39 +480,56 @@ Fact Table นี้ไม่มี Date Dimension เนื่องจาก�
 |---|---|
 | fact_ticket_sales | 1 Ticket × 1 Flight Segment |
 | fact_flight_operations | 1 Flight |
-| fact_seat_inventory | 1 Aircraft × 1 Fare Class |
+| fact_seat_utilization | 1 Flight |
 
 การกำหนด Grain ของ Fact Table อย่างชัดเจนช่วยป้องกันปัญหาการนับข้อมูลซ้ำ และช่วยให้การ Aggregate ข้อมูลมีความถูกต้อง
+
+ถึงแม้ `fact_flight_operations` และ `fact_seat_utilization` จะมี Grain ระดับ 1 Flight เหมือนกัน แต่ทั้งสอง Fact แทน Business Process ต่างกัน
+
+- `fact_flight_operations` → Flight Operation
+- `fact_seat_utilization` → Capacity Utilization
 
 ---
 
 # 6. Measure Classification
 
-Measure ใน Data Warehouse สามารถแบ่งได้เป็น Additive Measure และ Non-Additive Measure
+Measure ใน Data Warehouse สามารถแบ่งตามลักษณะการ Aggregate ได้
 
 ## Additive Measures
 
-Additive Measure สามารถนำมารวมค่าด้วย `SUM()` ได้ตาม Dimension ที่เกี่ยวข้อง
-
-ประกอบด้วย
+Measure ที่สามารถใช้ `SUM()` ได้ตาม Grain และ Dimension ที่เหมาะสม เช่น
 
 - `fact_ticket_sales.amount`
 - `fact_ticket_sales.ticket_flight_count`
 - `fact_flight_operations.flight_count`
-- `fact_seat_inventory.seat_count`
+- `fact_seat_utilization.ticket_flight_count`
+- `fact_seat_utilization.boarded_count`
+- `fact_seat_utilization.available_seats`
 
-ตัวอย่างเช่น `amount` สามารถนำมารวมเพื่อหายอดขายตั๋วรวม หรือยอดขายตาม Fare Class ได้
+ตัวอย่างเช่น `amount` สามารถนำมารวมเพื่อหายอดขายรวม หรือยอดขายตาม Route และ Fare Class ได้
 
-## Non-Additive Measures
+## Non-Additive / Average-Based Measures
 
-Measure ประเภท Delay ไม่ควรนำค่ามารวมด้วย `SUM()` เพื่อใช้ตีความโดยตรง แต่เหมาะกับการวิเคราะห์ด้วยค่าเฉลี่ย เช่น `AVG()`
+Measure ที่ไม่ควรนำมารวมด้วย `SUM()` เพื่อใช้ตีความโดยตรง ได้แก่
 
-ประกอบด้วย
-
+- `fact_flight_operations.scheduled_duration_minutes`
+- `fact_flight_operations.actual_duration_minutes`
 - `fact_flight_operations.departure_delay_minutes`
 - `fact_flight_operations.arrival_delay_minutes`
+- `fact_seat_utilization.ticketed_load_pct`
+- `fact_seat_utilization.boarded_load_pct`
 
-ตัวอย่างเช่น สามารถใช้ `AVG(departure_delay_minutes)` เพื่อหาความล่าช้าเฉลี่ยของสนามบินต้นทาง
+ตัวอย่างเช่น
+
+`AVG(departure_delay_minutes)`
+
+ใช้หาค่าเฉลี่ยความล่าช้าในการออกเดินทาง
+
+และ
+
+`AVG(boarded_load_pct)`
+
+ใช้เปรียบเทียบระดับการใช้ Capacity ระหว่าง Route หรือ Aircraft
 
 ---
 
@@ -410,20 +540,24 @@ Dimension ที่มีระดับสำหรับการวิเค�
 | Dimension | Hierarchy / Level |
 |---|---|
 | dim_date | Year → Quarter → Month → Date |
-| dim_airport | City → Airport |
-| dim_aircraft | Aircraft Model / Aircraft Code |
+| dim_airport | Country → Analysis Region → City → Airport |
+| dim_aircraft | Manufacturer → Aircraft Model / Aircraft Code |
 | dim_fare_class | Fare Class |
 | dim_flight_status | Flight Status |
 
-`dim_date` เป็น Dimension ที่มี Hierarchy ชัดเจนที่สุด และรองรับการ Roll-up และ Drill-down ตามระดับเวลา
+`dim_date` รองรับการ Roll-up และ Drill-down ตามระดับเวลา
 
-ตัวอย่างการ Drill-down ของ Time Dimension:
+ตัวอย่างการ Drill-down:
 
 **Year → Quarter → Month → Date**
 
 ตัวอย่างการ Roll-up:
 
 **Date → Month → Quarter → Year**
+
+`dim_airport` สามารถ Drill-down จากระดับประเทศไปยัง Region เมือง และสนามบิน
+
+`dim_aircraft` สามารถวิเคราะห์จากบริษัทผู้ผลิตลงไปยัง Aircraft Model ได้
 
 สำหรับ `dim_fare_class` และ `dim_flight_status` ไม่มี Hierarchy หลายระดับ เนื่องจากเป็น Dimension สำหรับการจำแนกประเภทข้อมูลโดยตรง
 
@@ -439,15 +573,23 @@ Dimension ที่มีระดับสำหรับการวิเค�
 
 - `fact_ticket_sales` ผ่าน `date_key`
 - `fact_flight_operations` ผ่าน `date_key`
+- `fact_seat_utilization` ผ่าน `date_key`
 
 ### DIM_AIRPORT
+
+ใช้เป็น Role-Playing Dimension
 
 เชื่อมกับ `fact_ticket_sales` ผ่าน
 
 - `departure_airport_key`
 - `arrival_airport_key`
 
-และเชื่อมกับ `fact_flight_operations` ผ่าน
+เชื่อมกับ `fact_flight_operations` ผ่าน
+
+- `departure_airport_key`
+- `arrival_airport_key`
+
+และเชื่อมกับ `fact_seat_utilization` ผ่าน
 
 - `departure_airport_key`
 - `arrival_airport_key`
@@ -458,7 +600,7 @@ Dimension ที่มีระดับสำหรับการวิเค�
 
 - `fact_ticket_sales`
 - `fact_flight_operations`
-- `fact_seat_inventory`
+- `fact_seat_utilization`
 
 ผ่าน `aircraft_key`
 
@@ -467,7 +609,6 @@ Dimension ที่มีระดับสำหรับการวิเค�
 เชื่อมกับ
 
 - `fact_ticket_sales`
-- `fact_seat_inventory`
 
 ผ่าน `fare_class_key`
 
@@ -485,25 +626,33 @@ Dimension ที่มีระดับสำหรับการวิเค�
 
 # 9. Business Question Mapping
 
-| Business Question | Fact Table | Dimension หลัก | Measure |
-|---|---|---|---|
-| Q1 ยอดขายตั๋วรวมเป็นเท่าใด | fact_ticket_sales | - | amount |
-| Q2 จำนวน Ticket Flight ทั้งหมดเท่าใด | fact_ticket_sales | - | ticket_flight_count |
-| Q3 Fare Class ใดสร้างยอดขายสูงที่สุด | fact_ticket_sales | dim_fare_class | amount |
-| Q4 Fare Class ใดมีจำนวน Ticket Flight มากที่สุด | fact_ticket_sales | dim_fare_class | ticket_flight_count |
-| Q5 ยอดขายตั๋วเปลี่ยนแปลงอย่างไรตามช่วงเวลา | fact_ticket_sales | dim_date | amount |
-| Q6 สนามบินต้นทางใดมีจำนวน Ticket Flight มากที่สุด | fact_ticket_sales | dim_airport | ticket_flight_count |
-| Q7 สนามบินปลายทางใดมีจำนวน Ticket Flight มากที่สุด | fact_ticket_sales | dim_airport | ticket_flight_count |
-| Q8 เส้นทางต้นทาง–ปลายทางใดมีจำนวน Ticket Flight มากที่สุด | fact_ticket_sales | dim_airport | ticket_flight_count |
-| Q9 เส้นทางใดสร้างยอดขายตั๋วสูงที่สุด | fact_ticket_sales | dim_airport | amount |
-| Q10 Aircraft Model ใดถูกใช้กับเที่ยวบินมากที่สุด | fact_flight_operations | dim_aircraft | flight_count |
-| Q11 Aircraft Model แต่ละรุ่นมีจำนวนที่นั่งเท่าใด | fact_seat_inventory | dim_aircraft | seat_count |
-| Q12 Aircraft Model แต่ละรุ่นมีสัดส่วนที่นั่งแต่ละ Fare Class อย่างไร | fact_seat_inventory | dim_aircraft, dim_fare_class | seat_count |
-| Q13 Flight Status แต่ละประเภทมีจำนวนเที่ยวบินเท่าใด | fact_flight_operations | dim_flight_status | flight_count |
-| Q14 สนามบินต้นทางใดมีเที่ยวบินล่าช้าเฉลี่ยมากที่สุด | fact_flight_operations | dim_airport | departure_delay_minutes |
-| Q15 ในแต่ละช่วงเวลา เส้นทางต้นทาง–ปลายทางและ Fare Class ใดสร้างยอดขายตั๋วสูงที่สุด | fact_ticket_sales | dim_date, dim_airport, dim_fare_class | amount |
+| Q | Business Question | Fact Table | Dimension / Attribute หลัก | Measure |
+|---|---|---|---|---|
+| Q1 | เส้นทางใดสร้างรายได้จากการขายตั๋วสูงที่สุด | fact_ticket_sales | Departure Airport + Arrival Airport | amount |
+| Q2 | Fare Class ใดสร้างรายได้สูงที่สุด และมีสัดส่วนรายได้เท่าใด | fact_ticket_sales | dim_fare_class | amount |
+| Q3 | รายได้จากการขายตั๋วมีแนวโน้มเปลี่ยนแปลงอย่างไรในแต่ละเดือน | fact_ticket_sales | dim_date | amount |
+| Q4 | ภูมิภาคต้นทาง–ปลายทางคู่ใดมีความต้องการเดินทางสูงที่สุด | fact_ticket_sales | Departure Region + Arrival Region | ticket_flight_count |
+| Q5 | เส้นทางใดมีอัตราการใช้ที่นั่งของผู้โดยสารจริงสูงและต่ำที่สุด | fact_seat_utilization | Departure Airport + Arrival Airport | boarded_load_pct |
+| Q6 | เที่ยวบินใดมีช่องว่างระหว่างจำนวนตั๋วที่ขายกับจำนวนผู้โดยสารที่ขึ้นเครื่องจริงมากที่สุด | fact_seat_utilization | Flight | ticket_flight_count, boarded_count |
+| Q7 | ช่วงเวลาใดของวันมีจำนวนเที่ยวบินและปริมาณผู้โดยสารสูงที่สุด | fact_flight_operations + fact_seat_utilization | Departure Daypart | flight_count, boarded_count |
+| Q8 | วันธรรมดากับวันหยุดสุดสัปดาห์มีความต้องการเดินทางแตกต่างกันอย่างไร | fact_ticket_sales / fact_seat_utilization | dim_date | ticket_flight_count / boarded_count |
+| Q9 | ผู้โดยสารมักจองตั๋วล่วงหน้ากี่วัน และแตกต่างกันอย่างไรในแต่ละ Fare Class | fact_ticket_sales | dim_fare_class | booking_lead_days |
+| Q10 | Aircraft Manufacturer และรุ่นเครื่องบินใดถูกใช้งานกับเที่ยวบินมากที่สุด | fact_flight_operations | dim_aircraft | flight_count |
+| Q11 | เส้นทางใดมีความล่าช้าในการออกเดินทางและถึงปลายทางเฉลี่ยสูงที่สุด | fact_flight_operations | Departure Airport + Arrival Airport | departure_delay_minutes, arrival_delay_minutes |
+| Q12 | ในแต่ละภูมิภาคและช่วงเวลาของวัน ช่วงใดมีความล่าช้าในการออกเดินทางเฉลี่ยสูงที่สุด | fact_flight_operations | Analysis Region × Daypart | departure_delay_minutes |
+| Q13 | ในแต่ละเส้นทาง Fare Class ใดสร้างรายได้สูง แต่มีจำนวนตั๋วขายไม่สูงตามไปด้วย | fact_ticket_sales | Route × dim_fare_class | amount, ticket_flight_count |
+| Q14 | ในแต่ละภูมิภาค Aircraft Manufacturer/Model ใดมีอัตราการใช้ที่นั่งจริงสูงที่สุด | fact_seat_utilization | Analysis Region × dim_aircraft | boarded_load_pct |
+| Q15 | เส้นทางและช่วงเวลาใดมีความต้องการเดินทางสูง แต่มีอัตราการใช้ที่นั่งสูงจนใกล้เต็มอย่างต่อเนื่อง | fact_seat_utilization | Route × Time | boarded_count, boarded_load_pct |
 
-Business Question ทั้ง 15 ข้อสามารถตอบได้จาก Fact และ Dimension ที่ออกแบบไว้ใน Data Warehouse
+Business Question ชุดใหม่นี้ออกแบบให้ไม่ได้มุ่งเพียงการหา “ค่าสูงสุด” แต่เน้นให้สามารถนำผลการวิเคราะห์ไปประกอบการตัดสินใจ เช่น
+
+- วางแผนเส้นทาง
+- จัดสรร Capacity
+- ปรับตารางเที่ยวบิน
+- วิเคราะห์ Demand
+- วางกลยุทธ์ราคา
+- วิเคราะห์ Fleet
+- ตรวจสอบ Operational Issues
 
 ---
 
@@ -519,14 +668,43 @@ Dimension Table ประกอบด้วย
 - `dim_fare_class`
 - `dim_flight_status`
 
+โดย Dimension ได้รับการปรับปรุงจาก Version เดิม ได้แก่
+
+- `dim_date` เพิ่ม `is_weekend` และ `day_type`
+- `dim_airport` เพิ่ม `country` และ `analysis_region`
+- `dim_aircraft` เพิ่ม `manufacturer`
+- `dim_airport` ถูกกำหนดบทบาทเป็น Role-Playing Dimension สำหรับ Departure และ Arrival อย่างชัดเจน
+- `dim_flight_status` ใช้แทน Operational Status ของเที่ยวบิน
+
 Fact Table ประกอบด้วย
 
 - `fact_ticket_sales`
 - `fact_flight_operations`
-- `fact_seat_inventory`
+- `fact_seat_utilization`
 
-Fact Table แต่ละตารางมี Grain ที่กำหนดไว้อย่างชัดเจน และถูกออกแบบให้รองรับ Business Question ที่แตกต่างกัน
+โดย Fact แต่ละตัวมี Business Process ที่แตกต่างกัน ได้แก่
 
-Dimension หลายตารางถูกใช้ร่วมกันระหว่าง Fact Table ทำให้สามารถวิเคราะห์ข้อมูลในมุมมองต่าง ๆ เช่น เวลา สนามบิน เครื่องบิน ชั้นโดยสาร และสถานะเที่ยวบินได้อย่างสอดคล้องกัน
+- Ticket Sales → รายได้และ Demand
+- Flight Operations → เวลา สถานะ Duration และ Delay
+- Seat Utilization → Capacity และการใช้ที่นั่ง
 
-การออกแบบนี้รองรับการวิเคราะห์ข้อมูลด้านยอดขายตั๋ว การดำเนินงานเที่ยวบิน และโครงสร้างที่นั่ง รวมทั้งรองรับการวิเคราะห์แบบหลายมิติผ่าน Galaxy Schema
+Fact Table แต่ละตารางมี Grain ที่กำหนดไว้อย่างชัดเจน ช่วยลดความเสี่ยงในการนับข้อมูลซ้ำ และทำให้การ Aggregate มีความถูกต้อง
+
+Dimension หลายตารางถูกใช้ร่วมกันระหว่าง Fact Table ทำให้สามารถวิเคราะห์ข้อมูลในมุมมองต่าง ๆ เช่น
+
+- เวลา
+- Weekday / Weekend
+- สนามบิน
+- Region
+- Route
+- เครื่องบิน
+- Manufacturer
+- Fare Class
+- Flight Status
+- Delay
+- Capacity
+- Load Percentage
+
+ได้อย่างสอดคล้องกัน
+
+Multidimensional Model ใหม่นี้จึงรองรับ Business Questions ชุดใหม่และการสร้าง Dashboard จาก Data Warehouse โดยตรงได้ดีกว่า Model เดิม
