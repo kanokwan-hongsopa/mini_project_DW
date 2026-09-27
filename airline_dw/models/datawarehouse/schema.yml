@@ -168,31 +168,35 @@ models:
 
 
   - name: fact_ticket_sales
-    description: "Fact table for ticket sales at ticket-flight segment grain"
+    description: "Fact table สำหรับยอดขายตั๋วที่ grain ระดับ 1 ticket ต่อ 1 flight segment"
     columns:
       - name: ticket_sales_key
-        description: "Surrogate key for ticket sales fact"
+        description: "Surrogate key ของ fact_ticket_sales"
         data_tests:
           - not_null
           - unique
 
       - name: ticket_no
-        description: "Ticket number"
+        description: "หมายเลขตั๋ว"
         data_tests:
           - not_null
 
       - name: flight_id
-        description: "Flight identifier"
+        description: "รหัสเที่ยวบิน"
         data_tests:
           - not_null
 
       - name: date_key
-        description: "Foreign key to date dimension"
+        description: "Foreign key ไปยัง dim_date"
         data_tests:
           - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_date')
+                field: date_key
 
       - name: departure_airport_key
-        description: "Foreign key to departure airport"
+        description: "Foreign key ของสนามบินต้นทาง"
         data_tests:
           - not_null
           - relationships:
@@ -201,7 +205,7 @@ models:
                 field: airport_key
 
       - name: arrival_airport_key
-        description: "Foreign key to arrival airport"
+        description: "Foreign key ของสนามบินปลายทาง"
         data_tests:
           - not_null
           - relationships:
@@ -210,7 +214,7 @@ models:
                 field: airport_key
 
       - name: aircraft_key
-        description: "Foreign key to aircraft dimension"
+        description: "Foreign key ไปยัง dim_aircraft"
         data_tests:
           - not_null
           - relationships:
@@ -219,7 +223,7 @@ models:
                 field: aircraft_key
 
       - name: fare_class_key
-        description: "Foreign key to fare class dimension"
+        description: "Foreign key ไปยัง dim_fare_class"
         data_tests:
           - not_null
           - relationships:
@@ -228,38 +232,52 @@ models:
                 field: fare_class_key
 
       - name: amount
-        description: "Ticket sales amount"
+        description: "ยอดขายตั๋ว"
+        data_tests:
+          - not_null
+
+      - name: booking_lead_days
+        description: "จำนวนวันระหว่างวันที่จองกับวันที่เที่ยวบินออก"
         data_tests:
           - not_null
 
       - name: ticket_flight_count
-        description: "Additive measure representing one ticket-flight segment"
+        description: "Measure สำหรับนับจำนวน ticket-flight segment"
         data_tests:
           - not_null
 
 
   - name: fact_flight_operations
-    description: "Fact table for flight operations at one row per flight grain"
+    description: "Fact table สำหรับการปฏิบัติการเที่ยวบิน โดย 1 แถวแทน 1 เที่ยวบิน"
     columns:
       - name: flight_operations_key
-        description: "Surrogate key for flight operations fact"
+        description: "Surrogate key ของ fact_flight_operations"
         data_tests:
           - not_null
           - unique
 
       - name: flight_id
-        description: "Flight identifier"
+        description: "รหัสเที่ยวบิน"
         data_tests:
           - not_null
           - unique
 
-      - name: date_key
-        description: "Foreign key to date dimension"
+      - name: flight_no
+        description: "หมายเลขเที่ยวบิน"
         data_tests:
           - not_null
 
+      - name: date_key
+        description: "Foreign key ไปยัง dim_date"
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_date')
+                field: date_key
+
       - name: departure_airport_key
-        description: "Foreign key to departure airport"
+        description: "Foreign key ของสนามบินต้นทาง"
         data_tests:
           - not_null
           - relationships:
@@ -268,7 +286,7 @@ models:
                 field: airport_key
 
       - name: arrival_airport_key
-        description: "Foreign key to arrival airport"
+        description: "Foreign key ของสนามบินปลายทาง"
         data_tests:
           - not_null
           - relationships:
@@ -277,7 +295,7 @@ models:
                 field: airport_key
 
       - name: aircraft_key
-        description: "Foreign key to aircraft dimension"
+        description: "Foreign key ไปยัง dim_aircraft"
         data_tests:
           - not_null
           - relationships:
@@ -286,7 +304,7 @@ models:
                 field: aircraft_key
 
       - name: status_key
-        description: "Foreign key to flight status dimension"
+        description: "Foreign key ไปยัง dim_flight_status"
         data_tests:
           - not_null
           - relationships:
@@ -294,23 +312,117 @@ models:
                 to: ref('dim_flight_status')
                 field: status_key
 
+      - name: scheduled_departure
+        description: "เวลาออกเดินทางตามกำหนด"
+
+      - name: scheduled_arrival
+        description: "เวลาถึงตามกำหนด"
+
+      - name: actual_departure
+        description: "เวลาออกเดินทางจริง"
+
+      - name: actual_arrival
+        description: "เวลาถึงจริง"
+
+      - name: scheduled_departure_local
+        description: "เวลาออกเดินทางตามกำหนดในเวลาท้องถิ่น"
+
+      - name: scheduled_arrival_local
+        description: "เวลาถึงตามกำหนดในเวลาท้องถิ่น"
+
+      - name: departure_local_hour
+        description: "ชั่วโมงออกเดินทางตามเวลาท้องถิ่น"
+
+      - name: departure_daypart
+        description: "ช่วงเวลาของวันของเที่ยวบินขาออก"
+        data_tests:
+          - not_null
+
+      - name: departure_is_weekend
+        description: "ระบุว่าเที่ยวบินออกในวันหยุดสุดสัปดาห์หรือไม่"
+        data_tests:
+          - not_null
+
+      - name: scheduled_duration_minutes
+        description: "ระยะเวลาเที่ยวบินตามกำหนด หน่วยเป็นนาที"
+
+      - name: actual_duration_minutes
+        description: "ระยะเวลาเที่ยวบินจริง หน่วยเป็นนาที"
+
+      - name: departure_delay_minutes
+        description: "จำนวนนาทีที่เที่ยวบินออกล่าช้า"
+
+      - name: arrival_delay_minutes
+        description: "จำนวนนาทีที่เที่ยวบินถึงล่าช้า"
+
+      - name: scheduled_duration_over_2h
+        description: "ระบุว่าเที่ยวบินตามกำหนดมีระยะเวลาเกิน 2 ชั่วโมงหรือไม่"
+
+      - name: departure_delay_over_2h
+        description: "ระบุว่าการออกเดินทางล่าช้าเกิน 2 ชั่วโมงหรือไม่"
+
+      - name: arrival_delay_over_2h
+        description: "ระบุว่าการถึงปลายทางล่าช้าเกิน 2 ชั่วโมงหรือไม่"
+
+      - name: boarded_count
+        description: "จำนวนผู้โดยสารที่ขึ้นเครื่องจริง"
+        data_tests:
+          - not_null
+
       - name: flight_count
-        description: "Additive measure representing one flight"
+        description: "Measure สำหรับนับจำนวนเที่ยวบิน"
         data_tests:
           - not_null
 
 
-  - name: fact_seat_inventory
-    description: "Fact table for seat inventory aggregated by aircraft and fare class"
+  - name: fact_seat_utilization
+    description: >
+      Fact table สำหรับวิเคราะห์การใช้ที่นั่งจริงในระดับเที่ยวบิน
+      โดย 1 แถวแทน 1 เที่ยวบิน รองรับการวิเคราะห์ capacity,
+      ticketed passengers, boarded passengers และ load percentage
+
     columns:
-      - name: seat_inventory_key
-        description: "Surrogate key for seat inventory fact"
+      - name: seat_utilization_key
+        description: "Surrogate key ของ fact_seat_utilization"
         data_tests:
           - not_null
           - unique
 
+      - name: flight_id
+        description: "รหัสเที่ยวบิน"
+        data_tests:
+          - not_null
+          - unique
+
+      - name: date_key
+        description: "Foreign key ไปยัง dim_date"
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_date')
+                field: date_key
+
+      - name: departure_airport_key
+        description: "Foreign key ของสนามบินต้นทาง"
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_airport')
+                field: airport_key
+
+      - name: arrival_airport_key
+        description: "Foreign key ของสนามบินปลายทาง"
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_airport')
+                field: airport_key
+
       - name: aircraft_key
-        description: "Foreign key to aircraft dimension"
+        description: "Foreign key ไปยัง dim_aircraft"
         data_tests:
           - not_null
           - relationships:
@@ -318,16 +430,37 @@ models:
                 to: ref('dim_aircraft')
                 field: aircraft_key
 
-      - name: fare_class_key
-        description: "Foreign key to fare class dimension"
+      - name: seat_capacity
+        description: "จำนวนที่นั่งทั้งหมดของเครื่องบิน"
         data_tests:
           - not_null
-          - relationships:
-              arguments:
-                to: ref('dim_fare_class')
-                field: fare_class_key
 
-      - name: seat_count
-        description: "Number of seats for each aircraft and fare class"
+      - name: ticket_flight_count
+        description: "จำนวนตั๋วที่มีในเที่ยวบิน"
         data_tests:
           - not_null
+
+      - name: boarded_count
+        description: "จำนวนผู้โดยสารที่ขึ้นเครื่องจริง"
+        data_tests:
+          - not_null
+
+      - name: available_seats
+        description: "จำนวนที่นั่งที่เหลือหลังจากผู้โดยสารขึ้นเครื่อง"
+
+      - name: booked_not_boarded_count
+        description: >
+          ช่องว่างระหว่างจำนวนตั๋วกับจำนวนผู้โดยสารที่ขึ้นเครื่อง
+          ใช้เป็น no-show proxy ไม่ใช่สถานะ no-show โดยตรง
+
+      - name: ticketed_load_pct
+        description: "อัตราการใช้ที่นั่งจากจำนวนตั๋วเทียบกับ capacity"
+
+      - name: boarded_load_pct
+        description: "อัตราการใช้ที่นั่งจริงจากผู้โดยสารที่ขึ้นเครื่องเทียบกับ capacity"
+
+      - name: departure_daypart
+        description: "ช่วงเวลาของวันของเที่ยวบินขาออก"
+
+      - name: departure_is_weekend
+        description: "ตัวบ่งชี้ว่าเที่ยวบินออกในวันหยุดสุดสัปดาห์หรือไม่"
