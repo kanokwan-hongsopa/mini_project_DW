@@ -12,6 +12,8 @@ final as (
         airport_code,
         airport_name,
         city,
+        country,
+        analysis_region,
         coordinates,
         timezone
     from source
