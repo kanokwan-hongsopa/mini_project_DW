@@ -10,10 +10,9 @@ final as (
     select
         row_number() over (
             order by f.flight_id
-        ) as flight_operations_key,
+        ) as seat_utilization_key,
 
         f.flight_id,
-        f.flight_no,
 
         cast(
             replace(
@@ -28,32 +27,26 @@ final as (
         arr.airport_key as arrival_airport_key,
 
         ac.aircraft_key,
-        fs.status_key,
 
-        f.scheduled_departure,
-        f.scheduled_arrival,
-        f.actual_departure,
-        f.actual_arrival,
-
-        f.scheduled_departure_local,
-        f.scheduled_arrival_local,
-        f.departure_local_hour,
-        f.departure_daypart,
-        f.departure_is_weekend,
-
-        f.scheduled_duration_minutes,
-        f.actual_duration_minutes,
-
-        f.departure_delay_minutes,
-        f.arrival_delay_minutes,
-
-        f.scheduled_duration_over_2h,
-        f.departure_delay_over_2h,
-        f.arrival_delay_over_2h,
-
+        f.seat_capacity,
+        f.ticket_flight_count,
         f.boarded_count,
 
-        1 as flight_count
+        greatest(
+            f.seat_capacity - f.boarded_count,
+            0
+        ) as available_seats,
+
+        greatest(
+            f.ticket_flight_count - f.boarded_count,
+            0
+        ) as booked_not_boarded_count,
+
+        f.ticketed_load_pct,
+        f.boarded_load_pct,
+
+        f.departure_daypart,
+        f.departure_is_weekend
 
     from flights f
 
@@ -65,9 +58,6 @@ final as (
 
     left join {{ ref('dim_aircraft') }} ac
         on f.aircraft_code = ac.aircraft_code
-
-    left join {{ ref('dim_flight_status') }} fs
-        on f.status = fs.status_name
 
 )
 
