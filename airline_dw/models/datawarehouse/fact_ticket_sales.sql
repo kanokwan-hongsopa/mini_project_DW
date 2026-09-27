@@ -28,6 +28,7 @@ joined as (
         dfc.fare_class_key,
 
         tf.amount,
+        tf.booking_lead_days,
 
         1 as ticket_flight_count
 
@@ -66,6 +67,7 @@ final as (
         fare_class_key,
 
         amount,
+        booking_lead_days,
         ticket_flight_count
 
     from joined

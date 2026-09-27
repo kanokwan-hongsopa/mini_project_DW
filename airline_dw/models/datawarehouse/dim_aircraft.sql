@@ -11,6 +11,7 @@ final as (
         row_number() over (order by aircraft_code) as aircraft_key,
         aircraft_code,
         model,
+        manufacturer,
         range
     from source
 
