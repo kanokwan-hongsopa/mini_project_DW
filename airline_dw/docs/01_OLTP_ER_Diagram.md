@@ -196,7 +196,7 @@
 
 แผนภาพต่อไปนี้แสดงความสัมพันธ์ระหว่างตารางข้อมูลต้นทาง โดยใช้ Crow's Foot Notation เพื่อแสดง Cardinality ของแต่ละความสัมพันธ์
 
-![OLTP ER Diagram](OLTP_ER_Diagram.png)
+![OLTP ER Diagram](er01.drawio.png)
 
 ---
 
