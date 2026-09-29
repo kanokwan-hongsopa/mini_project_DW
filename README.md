@@ -572,9 +572,13 @@ mini_project_DW/
 
 Dashboard รองรับ **Interactive Filters, Cascading Filters, Route Drill-down และ CSV Download** เพื่อช่วยสนับสนุนการวิเคราะห์และการตัดสินใจเชิงธุรกิจ
 
+### Data Warehouse Explorer URL
+
+https://miniprojectdw-fz7tpjqfaqjeqtcnlawq7x.streamlit.app/
+
 ### Dashboard URL
 
-https://miniprojectdw-72b5jte8lfnerbx8jcrms7.streamlit.app/
+[https://miniprojectdw-72b5jte8lfnerbx8jcrms7.streamlit.app/](https://miniprojectdw-3pntnkkaea4sgwctctrzi7.streamlit.app/)
 
 ---
 
