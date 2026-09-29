@@ -3,6 +3,8 @@ import duckdb
 import pandas as pd
 import plotly.express as px
 from pathlib import Path
+import subprocess
+import sys
 
 # =========================================================
 # PAGE CONFIG
@@ -15,18 +17,134 @@ st.set_page_config(
 )
 
 # =========================================================
-# DATABASE
-# dashboard_app.py must be at repo root:
-# mini_project_DW/dashboard_app.py
-# mini_project_DW/airline_dw/dev.duckdb
 # =========================================================
-DB_PATH = Path(__file__).resolve().parent / "airline_dw" / "dev.duckdb"
+# DATABASE
+# =========================================================
+ROOT_DIR = Path(__file__).resolve().parent
+AIRLINE_DIR = ROOT_DIR / "airline_dw"
+DB_PATH = AIRLINE_DIR / "dev.duckdb"
+PROFILES_PATH = AIRLINE_DIR / "profiles.yml"
 
-if not DB_PATH.exists():
-    st.error(f"ไม่พบฐานข้อมูล: {DB_PATH}")
-    st.info("ตรวจสอบว่า dashboard_app.py อยู่ที่ root ของ repo และมี airline_dw/dev.duckdb")
-    st.stop()
 
+def create_profiles_yml():
+    """Create local dbt profile for Streamlit Cloud if it does not exist."""
+    if not PROFILES_PATH.exists():
+        PROFILES_PATH.write_text(
+            """
+airline_dw:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      path: dev.duckdb
+      threads: 4
+""".strip(),
+            encoding="utf-8",
+        )
+
+
+def database_is_ready():
+    """Check whether the latest Data Warehouse tables exist."""
+    if not DB_PATH.exists():
+        return False
+
+    try:
+        check_con = duckdb.connect(str(DB_PATH), read_only=True)
+
+        tables = {
+            row[0]
+            for row in check_con.execute(
+                """
+                SELECT table_name
+                FROM information_schema.tables
+                WHERE table_schema = 'main'
+                """
+            ).fetchall()
+        }
+
+        check_con.close()
+
+        required_tables = {
+            "dim_date",
+            "dim_airport",
+            "dim_aircraft",
+            "dim_fare_class",
+            "dim_flight_status",
+            "fact_ticket_sales",
+            "fact_flight_operations",
+            "fact_seat_utilization",
+        }
+
+        return required_tables.issubset(tables)
+
+    except Exception:
+        return False
+
+
+def rebuild_data_warehouse():
+    """Rebuild DuckDB from CSV and dbt models."""
+    create_profiles_yml()
+
+    with st.status(
+        "กำลังเตรียม Airline Data Warehouse...",
+        expanded=True,
+    ) as status:
+
+        st.write("1/3 กำลังโหลด Raw Data...")
+
+        subprocess.run(
+            [sys.executable, "scripts/load_raw.py"],
+            cwd=AIRLINE_DIR,
+            check=True,
+        )
+
+        st.write("2/3 กำลังสร้าง Staging, Dimensions และ Facts...")
+
+        subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "dbt",
+                "run",
+                "--profiles-dir",
+                ".",
+            ],
+            cwd=AIRLINE_DIR,
+            check=True,
+        )
+
+        st.write("3/3 ตรวจสอบ Data Warehouse...")
+
+        subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "dbt",
+                "test",
+                "--profiles-dir",
+                ".",
+            ],
+            cwd=AIRLINE_DIR,
+            check=True,
+        )
+
+        status.update(
+            label="Data Warehouse พร้อมใช้งาน",
+            state="complete",
+            expanded=False,
+        )
+
+
+if not database_is_ready():
+    try:
+        rebuild_data_warehouse()
+    except Exception as e:
+        st.error("ไม่สามารถสร้าง Data Warehouse ได้")
+        st.exception(e)
+        st.stop()
+
+
+# เปิดฐานข้อมูลหลังจากตรวจสอบ/สร้างเสร็จแล้วเท่านั้น
 con = duckdb.connect(str(DB_PATH), read_only=True)
 
 # =========================================================
@@ -733,14 +851,13 @@ st.markdown(
 # =========================================================
 # MAIN TABS
 # =========================================================
-tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(
+tab1, tab2, tab3, tab4, tab5 = st.tabs(
     [
         "💰 Revenue & Demand",
         "💺 Capacity",
         "🧭 Travel Pattern",
         "✈️ Fleet & Operations",
         "🔎 Multidimensional",
-        "🗄️ DW Explorer",
     ]
 )
 
@@ -1620,91 +1737,6 @@ with tab5:
                 "ดาวน์โหลด Route Detail",
                 f"{selected_dep}_{selected_arr}_route_detail.csv",
             )
-
-# =========================================================
-# TAB 6 — DW EXPLORER
-# =========================================================
-with tab6:
-    st.markdown('<div class="section-title">Data Warehouse Explorer</div>', unsafe_allow_html=True)
-    st.markdown(
-        '<div class="section-desc">ตรวจสอบโครงสร้าง DW: Dimension / Fact, จำนวนแถว, จำนวนคอลัมน์, Data Types และ Sample Rows</div>',
-        unsafe_allow_html=True,
-    )
-
-    explorer_tables = [
-        "dim_date",
-        "dim_airport",
-        "dim_aircraft",
-        "dim_fare_class",
-        "dim_flight_status",
-        "fact_ticket_sales",
-        "fact_flight_operations",
-        "fact_seat_utilization",
-    ]
-
-    explorer_rows = []
-
-    for table_name in explorer_tables:
-        row_count = con.execute(
-            f'SELECT COUNT(*) FROM "{table_name}"'
-        ).fetchone()[0]
-
-        info = con.execute(
-            f"PRAGMA table_info('{table_name}')"
-        ).fetchdf()
-
-        explorer_rows.append(
-            {
-                "table_name": table_name,
-                "table_type": "Dimension" if table_name.startswith("dim_") else "Fact",
-                "record_count": row_count,
-                "column_count": len(info),
-            }
-        )
-
-    explorer_df = pd.DataFrame(explorer_rows)
-
-    e1, e2, e3 = st.columns(3)
-    e1.metric("DW Tables", len(explorer_df))
-    e2.metric("Dimensions", int((explorer_df["table_type"] == "Dimension").sum()))
-    e3.metric("Facts", int((explorer_df["table_type"] == "Fact").sum()))
-
-    st.dataframe(
-        explorer_df,
-        use_container_width=True,
-        hide_index=True,
-    )
-
-    selected_table = st.selectbox(
-        "เลือกตารางเพื่อดูรายละเอียด",
-        explorer_tables,
-    )
-
-    table_info = con.execute(
-        f"PRAGMA table_info('{selected_table}')"
-    ).fetchdf()
-
-    sample_df = con.execute(
-        f'SELECT * FROM "{selected_table}" LIMIT 10'
-    ).fetchdf()
-
-    ec1, ec2 = st.columns([1, 2])
-
-    with ec1:
-        st.subheader("Columns & Data Types")
-        st.dataframe(
-            table_info[["name", "type", "notnull", "pk"]],
-            use_container_width=True,
-            hide_index=True,
-        )
-
-    with ec2:
-        st.subheader("Sample Rows")
-        st.dataframe(
-            sample_df,
-            use_container_width=True,
-            hide_index=True,
-        )
 
 # =========================================================
 # FOOTER
