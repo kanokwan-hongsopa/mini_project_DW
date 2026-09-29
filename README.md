@@ -350,7 +350,7 @@ python query_duckdb.py
 
 ### Dashboard Link
 
-https://miniprojectdw-72b5jte8lfnerbx8jcrms7.streamlit.app/
+[https://miniprojectdw-72b5jte8lfnerbx8jcrms7.streamlit.app/](https://miniprojectdw-72b5jte8lfnerbx8jcrms7.streamlit.app/)
 
 ---
 
