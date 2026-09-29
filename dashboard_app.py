@@ -5,6 +5,7 @@ import plotly.express as px
 from pathlib import Path
 import subprocess
 import sys
+import shutil
 
 # =========================================================
 # PAGE CONFIG
@@ -17,7 +18,6 @@ st.set_page_config(
 )
 
 # =========================================================
-# =========================================================
 # DATABASE
 # =========================================================
 ROOT_DIR = Path(__file__).resolve().parent
@@ -27,30 +27,26 @@ PROFILES_PATH = AIRLINE_DIR / "profiles.yml"
 
 
 def create_profiles_yml():
-    """Create local dbt profile for Streamlit Cloud if it does not exist."""
-    if not PROFILES_PATH.exists():
-        PROFILES_PATH.write_text(
-            """
-airline_dw:
+    """Create a local dbt profile for Streamlit Cloud."""
+    PROFILES_PATH.write_text(
+        """airline_dw:
   target: dev
   outputs:
     dev:
       type: duckdb
       path: dev.duckdb
       threads: 4
-""".strip(),
-            encoding="utf-8",
-        )
+""",
+        encoding="utf-8",
+    )
 
 
-def database_is_ready():
-    """Check whether the latest Data Warehouse tables exist."""
+def get_existing_tables():
     if not DB_PATH.exists():
-        return False
+        return set()
 
     try:
         check_con = duckdb.connect(str(DB_PATH), read_only=True)
-
         tables = {
             row[0]
             for row in check_con.execute(
@@ -61,29 +57,67 @@ def database_is_ready():
                 """
             ).fetchall()
         }
-
         check_con.close()
-
-        required_tables = {
-            "dim_date",
-            "dim_airport",
-            "dim_aircraft",
-            "dim_fare_class",
-            "dim_flight_status",
-            "fact_ticket_sales",
-            "fact_flight_operations",
-            "fact_seat_utilization",
-        }
-
-        return required_tables.issubset(tables)
-
+        return tables
     except Exception:
-        return False
+        return set()
+
+
+REQUIRED_DW_TABLES = {
+    "dim_date",
+    "dim_airport",
+    "dim_aircraft",
+    "dim_fare_class",
+    "dim_flight_status",
+    "fact_ticket_sales",
+    "fact_flight_operations",
+    "fact_seat_utilization",
+}
+
+
+def database_is_ready():
+    return REQUIRED_DW_TABLES.issubset(get_existing_tables())
+
+
+def run_command(command, cwd, label):
+    """Run a command and show useful logs if it fails."""
+    result = subprocess.run(
+        command,
+        cwd=cwd,
+        text=True,
+        capture_output=True,
+    )
+
+    if result.returncode != 0:
+        st.error(f"{label} ไม่สำเร็จ")
+
+        if result.stdout:
+            st.markdown("**STDOUT**")
+            st.code(result.stdout[-12000:], language="text")
+
+        if result.stderr:
+            st.markdown("**STDERR**")
+            st.code(result.stderr[-12000:], language="text")
+
+        raise RuntimeError(
+            f"{label} failed with exit code {result.returncode}"
+        )
+
+    return result
 
 
 def rebuild_data_warehouse():
-    """Rebuild DuckDB from CSV and dbt models."""
+    """Rebuild DuckDB from source CSV files and dbt models."""
     create_profiles_yml()
+
+    dbt_executable = shutil.which("dbt")
+
+    if not dbt_executable:
+        st.error("ไม่พบคำสั่ง dbt ใน Streamlit environment")
+        st.info(
+            "ตรวจสอบ requirements.txt ว่ามี dbt-core และ dbt-duckdb"
+        )
+        st.stop()
 
     with st.status(
         "กำลังเตรียม Airline Data Warehouse...",
@@ -92,41 +126,45 @@ def rebuild_data_warehouse():
 
         st.write("1/3 กำลังโหลด Raw Data...")
 
-        subprocess.run(
+        run_command(
             [sys.executable, "scripts/load_raw.py"],
-            cwd=AIRLINE_DIR,
-            check=True,
+            AIRLINE_DIR,
+            "Load Raw Data",
         )
 
         st.write("2/3 กำลังสร้าง Staging, Dimensions และ Facts...")
 
-        subprocess.run(
+        run_command(
             [
-                sys.executable,
-                "-m",
-                "dbt",
+                dbt_executable,
                 "run",
                 "--profiles-dir",
                 ".",
             ],
-            cwd=AIRLINE_DIR,
-            check=True,
+            AIRLINE_DIR,
+            "dbt run",
         )
 
-        st.write("3/3 ตรวจสอบ Data Warehouse...")
+        st.write("3/3 กำลังตรวจสอบ Data Warehouse...")
 
-        subprocess.run(
+        run_command(
             [
-                sys.executable,
-                "-m",
-                "dbt",
+                dbt_executable,
                 "test",
                 "--profiles-dir",
                 ".",
             ],
-            cwd=AIRLINE_DIR,
-            check=True,
+            AIRLINE_DIR,
+            "dbt test",
         )
+
+        missing_after_build = REQUIRED_DW_TABLES - get_existing_tables()
+
+        if missing_after_build:
+            raise RuntimeError(
+                "สร้าง Data Warehouse แล้ว แต่ยังขาดตาราง: "
+                + ", ".join(sorted(missing_after_build))
+            )
 
         status.update(
             label="Data Warehouse พร้อมใช้งาน",
@@ -138,13 +176,12 @@ def rebuild_data_warehouse():
 if not database_is_ready():
     try:
         rebuild_data_warehouse()
-    except Exception as e:
+    except Exception as exc:
         st.error("ไม่สามารถสร้าง Data Warehouse ได้")
-        st.exception(e)
+        st.exception(exc)
         st.stop()
 
 
-# เปิดฐานข้อมูลหลังจากตรวจสอบ/สร้างเสร็จแล้วเท่านั้น
 con = duckdb.connect(str(DB_PATH), read_only=True)
 
 # =========================================================
@@ -454,7 +491,7 @@ def display_chart(fig, height=420):
     style_chart(fig, height)
     st.plotly_chart(
         fig,
-        use_container_width=True,
+        width="stretch",
         config={"displayModeBar": False},
     )
 
@@ -472,7 +509,7 @@ def download_df(df, label, filename):
         data=df.to_csv(index=False).encode("utf-8-sig"),
         file_name=filename,
         mime="text/csv",
-        use_container_width=True,
+        width="stretch",
     )
 
 
@@ -516,13 +553,6 @@ existing_tables = set(
     ).fetchdf()["table_name"].tolist()
 )
 
-missing_tables = [t for t in required_tables if t not in existing_tables]
-
-if missing_tables:
-    st.error("Dashboard ยังเปิดไม่ครบ เพราะขาดตาราง: " + ", ".join(missing_tables))
-    st.info("รัน python scripts\\load_raw.py แล้ว dbt run --profiles-dir . และ dbt test --profiles-dir .")
-    st.stop()
-
 DAYPART_OPS = first_existing(
     "fact_flight_operations",
     ["departure_daypart", "daypart", "scheduled_departure_daypart"],
@@ -551,7 +581,7 @@ st.markdown(
   <div class="hero-sub">
     Interactive Dashboard สำหรับ Business Questions Q1–Q15
     โดย Query จาก Dimension และ Fact Tables ของ Data Warehouse เท่านั้น
-    พร้อม KPI, Filters, Drill-down, Download CSV และ DW Explorer
+    พร้อม KPI, Filters, Drill-down และ Download CSV
   </div>
   <span class="hero-chip">3 Fact Tables</span>
   <span class="hero-chip">5 Dimensions</span>
@@ -1118,7 +1148,7 @@ with tab2:
         "ไม่ควรสรุปว่าเป็น no-show ทุกกรณี"
     )
 
-    st.dataframe(q6, use_container_width=True, hide_index=True)
+    st.dataframe(q6, width="stretch", hide_index=True)
     download_df(q6, "ดาวน์โหลด Q6", "Q6_booked_not_boarded_gap.csv")
 
 # =========================================================
@@ -1731,7 +1761,7 @@ with tab5:
                 display_chart(fig, 360)
 
         with d2:
-            st.dataframe(drill_df, use_container_width=True, hide_index=True)
+            st.dataframe(drill_df, width="stretch", hide_index=True)
             download_df(
                 drill_df,
                 "ดาวน์โหลด Route Detail",
