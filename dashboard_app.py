@@ -22,7 +22,7 @@ st.set_page_config(
 # =========================================================
 ROOT_DIR = Path(__file__).resolve().parent
 AIRLINE_DIR = ROOT_DIR / "airline_dw"
-DB_PATH = AIRLINE_DIR / "dev.duckdb"
+DB_PATH = AIRLINE_DIR / "runtime.duckdb"
 PROFILES_PATH = AIRLINE_DIR / "profiles.yml"
 
 
@@ -34,7 +34,7 @@ def create_profiles_yml():
   outputs:
     dev:
       type: duckdb
-      path: dev.duckdb
+      path: runtime.duckdb
       threads: 4
 """,
         encoding="utf-8",
@@ -79,13 +79,14 @@ def database_is_ready():
     return REQUIRED_DW_TABLES.issubset(get_existing_tables())
 
 
-def run_command(command, cwd, label):
+def run_command(command, cwd, label, env=None):
     """Run a command and show useful logs if it fails."""
     result = subprocess.run(
         command,
         cwd=cwd,
         text=True,
         capture_output=True,
+        env=env,
     )
 
     if result.returncode != 0:
@@ -126,10 +127,14 @@ def rebuild_data_warehouse():
 
         st.write("1/3 กำลังโหลด Raw Data...")
 
+        load_env = dict(**__import__("os").environ)
+        load_env["AIRLINE_DW_DB_PATH"] = "runtime.duckdb"
+
         run_command(
             [sys.executable, "scripts/load_raw.py"],
             AIRLINE_DIR,
             "Load Raw Data",
+            env=load_env,
         )
 
         st.write("2/3 กำลังสร้าง Staging, Dimensions และ Facts...")
