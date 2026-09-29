@@ -1,7 +1,8 @@
+import os
 import duckdb
 from pathlib import Path
 
-DB_PATH = "dev.duckdb"
+DB_PATH = os.getenv("AIRLINE_DW_DB_PATH", "dev.duckdb")
 DATA_DIR = Path("datasets")
 
 tables = {
