@@ -30,9 +30,9 @@
 | Member | Responsibility |
 |---|---|
 | **1. 673020246-9 ชลธิชา หอมพรมมา** | Source Configuration, Booking/Ticket Staging |
-| **2. 673020254-0 ธัณญ์ฌัณญา วงค์จันทร์** | Flight Staging, Cleaning, ETL |
+| **2. 673020268-9 อนัญญา ทองปน** | Flight Staging, Cleaning, ETL |
 | **3. 673020258-2 ปวริศา โง่นสูงเนิน** | Dimension Tables, OLTP ER |
-| **4. 673020268-9 อนัญญา ทองปน** | Fact Tables, Analytical Queries Q1-Q8 |
+| **4. 673020254-0 ธัณญ์ฌัณญา วงค์จันทร์** | Fact Tables, Analytical Queries Q1-Q8 |
 | **5. 673020487-7 กนกวรรณ หงษ์โสภา** | Analytical Queries Q9-Q15, Dashboard |
 
 ---
@@ -852,4 +852,4 @@ https://miniprojectdw-fz7tpjqfaqjeqtcnlawq7x.streamlit.app/
 
 ---
 
-<img width="1152" height="1728" alt="Dashboard Screenshot" src="https://github.com/user-attachments/assets/2c6392b6-9c09-4753-b8be-797f4e2dc985" />
+<img width="1024" height="1536" alt="27612" src="https://github.com/user-attachments/assets/0bf0df64-6c27-48a3-a8af-93ff22d2ce6b" />
