@@ -844,7 +844,11 @@ Dashboard รองรับ **Interactive Filters, Cascading Filters, Route Dri
 
 ### Dashboard URL
 
-https://miniprojectdw-72b5jte8lfnerbx8jcrms7.streamlit.app/
+[https://miniprojectdw-72b5jte8lfnerbx8jcrms7.streamlit.app/](https://miniprojectdw-3pntnkkaea4sgwctctrzi7.streamlit.app/)
+
+### DW Explorer URL
+
+https://miniprojectdw-fz7tpjqfaqjeqtcnlawq7x.streamlit.app/
 
 ---
 
