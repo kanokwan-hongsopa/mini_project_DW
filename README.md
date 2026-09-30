@@ -112,6 +112,8 @@ Streamlit Applications
 
 ## 6. Data Model
 
+### OLTP ER Diagram 
+![OLTP ER Diagram](airline_dw/docs/er01.drawio.png)
 โปรเจกต์นี้ใช้รูปแบบ **Galaxy Schema (Fact Constellation)** เนื่องจากมี Fact Table หลายตารางและมีการใช้ Dimension บางส่วนร่วมกัน
 
 ### Dimension Tables
