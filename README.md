@@ -128,7 +128,7 @@ Streamlit Applications
 - `fact_flight_operations`
 - `fact_seat_utilization`
 
-<img width="2205" height="1661" alt="Galaxy Schema" src="https://github.com/user-attachments/assets/d980e549-26cd-4dfc-89ed-e4b6e11e1b0b" />
+<img width="2948" height="2330" alt="Untitled Diagram drawio (1)" src="https://github.com/user-attachments/assets/bcd92561-66f8-4251-9143-1f993e1b24a5" />
 
 ---
 
