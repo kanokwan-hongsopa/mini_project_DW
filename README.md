@@ -264,11 +264,290 @@ Analytical Queries ใช้คำสั่ง เช่น
 
 ---
 
-## 10. Applications
+## 10. Query Usage Guide
+
+ส่วนนี้อธิบายวิธีใช้งาน Query ของโปรเจกต์ Airline Data Warehouse ทั้งในรูปแบบ SQL Analysis Files และผ่าน Python Query Tool
+
+### 10.1 Query Files Location
+
+Analytical Queries ทั้งหมดอยู่ในโฟลเดอร์
+
+`airline_dw/analyses/`
+
+ประกอบด้วยไฟล์ Query ตั้งแต่ Q1–Q15 ได้แก่
+
+- `query_01_route_revenue.sql`
+- `query_02_fare_class_revenue_share.sql`
+- `query_03_monthly_revenue_trend.sql`
+- `query_04_region_pair_demand.sql`
+- `query_05_route_boarded_load.sql`
+- `query_06_booked_not_boarded_gap.sql`
+- `query_07_daypart_traffic.sql`
+- `query_08_weekday_weekend_demand.sql`
+- `query_09_booking_lead_by_fare_class.sql`
+- `query_10_aircraft_usage.sql`
+- `query_11_route_delay.sql`
+- `query_12_region_daypart_delay.sql`
+- `query_13_route_fare_efficiency.sql`
+- `query_14_region_aircraft_load.sql`
+- `query_15_route_daypart_high_demand_load.sql`
+
+### 10.2 เตรียม Environment ก่อนใช้งาน Query
+
+เปิด Terminal แล้วเข้าโฟลเดอร์โปรเจกต์
+
+```bash
+cd mini_project_DW
+```
+
+Activate Virtual Environment
+
+#### Windows
+
+```bash
+.venv\Scripts\activate
+```
+
+#### Linux / macOS
+
+```bash
+source .venv/bin/activate
+```
+
+จากนั้นเข้าโฟลเดอร์ `airline_dw`
+
+```bash
+cd airline_dw
+```
+
+### 10.3 ตรวจสอบ Data Warehouse ก่อนรัน Query
+
+ตรวจสอบการเชื่อมต่อของ dbt
+
+```bash
+dbt debug --profiles-dir .
+```
+
+สร้างหรืออัปเดต Data Warehouse Models
+
+```bash
+dbt run --profiles-dir .
+```
+
+ตรวจสอบคุณภาพข้อมูล
+
+```bash
+dbt test --profiles-dir .
+```
+
+เมื่อคำสั่งเหล่านี้ทำงานสำเร็จ จะสามารถ Query ข้อมูลจาก Dimension และ Fact Tables ใน Data Warehouse ได้
+
+### 10.4 การใช้งาน Analytical SQL Queries
+
+ไฟล์ SQL ในโฟลเดอร์
+
+`airline_dw/analyses/`
+
+ถูกออกแบบให้ตอบ Business Questions Q1–Q15 โดยแต่ละไฟล์ใช้ข้อมูลจาก Dimension และ Fact Tables ที่เกี่ยวข้อง
+
+ตัวอย่างเช่น
+
+- `query_01_route_revenue.sql` ใช้วิเคราะห์รายได้ตามเส้นทาง
+- `query_05_route_boarded_load.sql` ใช้วิเคราะห์อัตราการใช้ที่นั่งตามเส้นทาง
+- `query_09_booking_lead_by_fare_class.sql` ใช้วิเคราะห์ระยะเวลาการจองล่วงหน้าตาม Fare Class
+- `query_12_region_daypart_delay.sql` ใช้วิเคราะห์ Delay ตาม Region × Daypart
+- `query_14_region_aircraft_load.sql` ใช้วิเคราะห์ Seat Utilization ตาม Region × Aircraft
+
+สามารถเปิดไฟล์ `.sql` แต่ละไฟล์เพื่อดู Logic และ SQL Query ที่ใช้ตอบ Business Question ได้โดยตรง
+
+### 10.5 Compile Analytical Queries ด้วย dbt
+
+สามารถใช้ `dbt compile` เพื่อตรวจสอบและ Compile SQL Analysis Files ได้ด้วยคำสั่ง
+
+```bash
+dbt compile --profiles-dir .
+```
+
+หลังจาก Compile สำเร็จ SQL ที่ผ่านการประมวลผลแล้วจะอยู่ในโฟลเดอร์
+
+```text
+target/compiled/
+```
+
+การ Compile ช่วยตรวจสอบว่า `ref()` และ Logic ที่อ้างอิง dbt Models ถูกแปลงเป็น SQL ที่สามารถนำไปใช้งานกับ Data Warehouse ได้
+
+### 10.6 การ Query ผ่าน Python
+
+โปรเจกต์มีไฟล์
+
+`query_duckdb.py`
+
+อยู่ที่ Root ของ Repository
+
+ใช้สำหรับ Query และตรวจสอบข้อมูลใน DuckDB ผ่าน Terminal โดยไม่จำเป็นต้องเปิด Dashboard
+
+ก่อนรันให้กลับไปที่ Root ของโปรเจกต์
+
+```bash
+cd ..
+```
+
+จากนั้นรัน
+
+```bash
+python query_duckdb.py
+```
+
+โปรแกรมสามารถใช้ตรวจสอบข้อมูล เช่น
+
+- รายชื่อ Tables ใน Data Warehouse
+- จำนวน Dimension Tables
+- จำนวน Fact Tables
+- จำนวน Records
+- จำนวน Columns
+- Schema
+- Data Types
+- Sample Data
+
+### 10.7 ตัวอย่างการใช้งาน `query_duckdb.py`
+
+เมื่อรัน
+
+```bash
+python query_duckdb.py
+```
+
+โปรแกรมจะแสดงเมนูสำหรับเลือกดูข้อมูล
+
+```text
+1. Database Overview
+2. Explore Table
+3. List All Tables
+```
+
+#### ตัวเลือก 1: Database Overview
+
+ใช้สำหรับดูภาพรวมของ Data Warehouse เช่น
+
+- จำนวน Tables
+- จำนวน Dimension Tables
+- จำนวน Fact Tables
+- จำนวน Records
+- จำนวน Columns
+
+#### ตัวเลือก 2: Explore Table
+
+ใช้สำหรับเลือก Table ที่ต้องการตรวจสอบ เช่น
+
+```text
+dim_date
+dim_airport
+dim_aircraft
+dim_fare_class
+dim_flight_status
+fact_ticket_sales
+fact_flight_operations
+fact_seat_utilization
+```
+
+หลังจากเลือก Table สามารถดูข้อมูล เช่น
+
+- Row Count
+- Schema
+- Data Types
+- Sample Rows
+- ข้อมูลภายใน Table
+
+#### ตัวเลือก 3: List All Tables
+
+ใช้สำหรับแสดงรายชื่อ Tables ทั้งหมดที่มีอยู่ใน Data Warehouse
+
+### 10.8 ตัวอย่าง SQL Query
+
+ตัวอย่างการ Query รายได้ตาม Fare Class
+
+```sql
+SELECT
+    fare_class_key,
+    SUM(amount) AS total_revenue
+FROM fact_ticket_sales
+GROUP BY fare_class_key
+ORDER BY total_revenue DESC;
+```
+
+ตัวอย่างการ Query จำนวนเที่ยวบินตามสถานะ
+
+```sql
+SELECT
+    status_key,
+    COUNT(*) AS total_flights
+FROM fact_flight_operations
+GROUP BY status_key
+ORDER BY total_flights DESC;
+```
+
+ตัวอย่างการ Query อัตราการใช้ที่นั่ง
+
+```sql
+SELECT
+    departure_airport_key,
+    arrival_airport_key,
+    SUM(boarded_count) AS boarded_count,
+    SUM(seat_capacity) AS seat_capacity,
+    ROUND(
+        100.0 * SUM(boarded_count) / NULLIF(SUM(seat_capacity), 0),
+        2
+    ) AS boarded_load_pct
+FROM fact_seat_utilization
+GROUP BY
+    departure_airport_key,
+    arrival_airport_key
+ORDER BY boarded_load_pct DESC;
+```
+
+### 10.9 Mapping Query กับ Business Questions
+
+| Query File | Business Question |
+|---|---|
+| `query_01_route_revenue.sql` | เส้นทางที่สร้างรายได้สูงที่สุด |
+| `query_02_fare_class_revenue_share.sql` | รายได้และสัดส่วนรายได้ตาม Fare Class |
+| `query_03_monthly_revenue_trend.sql` | แนวโน้มรายได้รายเดือน |
+| `query_04_region_pair_demand.sql` | Demand ตามคู่ภูมิภาคต้นทาง–ปลายทาง |
+| `query_05_route_boarded_load.sql` | อัตราการใช้ที่นั่งตามเส้นทาง |
+| `query_06_booked_not_boarded_gap.sql` | ช่องว่างระหว่าง Ticket กับ Boarded |
+| `query_07_daypart_traffic.sql` | Traffic ตามช่วงเวลาของวัน |
+| `query_08_weekday_weekend_demand.sql` | Weekday vs Weekend Demand |
+| `query_09_booking_lead_by_fare_class.sql` | Booking Lead Time ตาม Fare Class |
+| `query_10_aircraft_usage.sql` | Aircraft Usage |
+| `query_11_route_delay.sql` | Delay ตามเส้นทาง |
+| `query_12_region_daypart_delay.sql` | Delay ตาม Region × Daypart |
+| `query_13_route_fare_efficiency.sql` | Route × Fare Class Revenue Efficiency |
+| `query_14_region_aircraft_load.sql` | Region × Aircraft Seat Utilization |
+| `query_15_route_daypart_high_demand_load.sql` | Route × Daypart High Demand and Load |
+
+### 10.10 สรุปการใช้งาน Query
+
+Query ของโปรเจกต์สามารถใช้งานได้ 2 รูปแบบหลัก
+
+1. **SQL Analytical Queries**
+   - อยู่ใน `airline_dw/analyses/`
+   - ใช้ตอบ Business Questions Q1–Q15
+   - สามารถ Compile ผ่าน dbt ได้
+
+2. **Python DuckDB Query Tool**
+   - ใช้ไฟล์ `query_duckdb.py`
+   - ใช้ตรวจสอบ Database, Schema, Records และ Sample Data
+   - เหมาะสำหรับตรวจสอบ Data Warehouse ผ่าน Terminal
+
+ทั้งสองวิธีใช้ข้อมูลจาก Dimension และ Fact Tables ที่สร้างด้วย dbt
+
+---
+
+## 11. Applications
 
 โปรเจกต์มีเครื่องมือสำหรับตรวจสอบและวิเคราะห์ Data Warehouse จำนวน **3 ส่วน**
 
-### 10.1 Business Dashboard
+### 11.1 Business Dashboard
 
 **ไฟล์:** `dashboard_app.py`
 
@@ -304,7 +583,7 @@ Dashboard พัฒนาด้วย
 streamlit run dashboard_app.py
 ```
 
-### 10.2 Data Warehouse Explorer
+### 11.2 Data Warehouse Explorer
 
 **ไฟล์:** `app.py`
 
@@ -327,20 +606,11 @@ streamlit run dashboard_app.py
 streamlit run app.py
 ```
 
-### 10.3 DuckDB Query Tool
+### 11.3 DuckDB Query Tool
 
 **ไฟล์:** `query_duckdb.py`
 
 ใช้สำหรับ Query และตรวจสอบข้อมูลใน `dev.duckdb` ผ่าน Python / Terminal
-
-สามารถตรวจสอบได้ เช่น
-
-- รายชื่อ Tables
-- Dimension / Fact Tables
-- Row Count
-- Column Count
-- Schema / Data Types
-- Sample Data
 
 **รันด้วย**
 
@@ -350,11 +620,11 @@ python query_duckdb.py
 
 ### Dashboard Link
 
-[https://miniprojectdw-72b5jte8lfnerbx8jcrms7.streamlit.app/](https://miniprojectdw-72b5jte8lfnerbx8jcrms7.streamlit.app/)
+https://miniprojectdw-72b5jte8lfnerbx8jcrms7.streamlit.app/
 
 ---
 
-## 11. Data Quality and Testing
+## 12. Data Quality and Testing
 
 โปรเจกต์ใช้ **dbt tests** เพื่อตรวจสอบคุณภาพข้อมูล
 
@@ -381,22 +651,22 @@ dbt test --profiles-dir .
 
 ---
 
-## 12. How to Run the Project
+## 13. How to Run the Project
 
-### 12.1 Clone Repository
+### 13.1 Clone Repository
 
 ```bash
 git clone https://github.com/kanokwan-hongsopa/mini_project_DW.git
 cd mini_project_DW
 ```
 
-### 12.2 Create Python Virtual Environment
+### 13.2 Create Python Virtual Environment
 
 ```bash
 python -m venv .venv
 ```
 
-### 12.3 Activate Environment
+### 13.3 Activate Environment
 
 #### Windows
 
@@ -410,13 +680,13 @@ python -m venv .venv
 source .venv/bin/activate
 ```
 
-### 12.4 Install Dependencies
+### 13.4 Install Dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 12.5 Create dbt Profile
+### 13.5 Create dbt Profile
 
 เข้าไปที่โฟลเดอร์
 
@@ -442,43 +712,43 @@ airline_dw:
 dbt debug --profiles-dir .
 ```
 
-### 12.6 Load Raw Data
+### 13.6 Load Raw Data
 
 ```bash
 python scripts/load_raw.py
 ```
 
-### 12.7 Run dbt Models
+### 13.7 Run dbt Models
 
 ```bash
 dbt run --profiles-dir .
 ```
 
-### 12.8 Run dbt Tests
+### 13.8 Run dbt Tests
 
 ```bash
 dbt test --profiles-dir .
 ```
 
-### 12.9 Return to Project Root
+### 13.9 Return to Project Root
 
 ```bash
 cd ..
 ```
 
-### 12.10 Run Business Dashboard
+### 13.10 Run Business Dashboard
 
 ```bash
 streamlit run dashboard_app.py
 ```
 
-### 12.11 Run Data Warehouse Explorer
+### 13.11 Run Data Warehouse Explorer
 
 ```bash
 streamlit run app.py
 ```
 
-### 12.12 Run DuckDB Query Tool
+### 13.12 Run DuckDB Query Tool
 
 ```bash
 python query_duckdb.py
@@ -486,7 +756,7 @@ python query_duckdb.py
 
 ---
 
-## 13. Repository Structure
+## 14. Repository Structure
 
 โครงสร้างหลักของ Repository
 
@@ -540,7 +810,7 @@ mini_project_DW/
 
 ---
 
-## 14. Technologies Used
+## 15. Technologies Used
 
 - **Python**
 - **dbt**
@@ -554,7 +824,7 @@ mini_project_DW/
 
 ---
 
-## 15. Conclusion
+## 16. Conclusion
 
 โปรเจกต์ **Airline Data Warehouse** ถูกพัฒนาขึ้นเพื่อแปลงข้อมูลสายการบินจาก Operational Data Source ให้เป็น Data Warehouse สำหรับการวิเคราะห์ข้อมูลเชิงธุรกิจ
 
@@ -572,13 +842,9 @@ mini_project_DW/
 
 Dashboard รองรับ **Interactive Filters, Cascading Filters, Route Drill-down และ CSV Download** เพื่อช่วยสนับสนุนการวิเคราะห์และการตัดสินใจเชิงธุรกิจ
 
-### Data Warehouse Explorer URL
-
-https://miniprojectdw-fz7tpjqfaqjeqtcnlawq7x.streamlit.app/
-
 ### Dashboard URL
 
-[https://miniprojectdw-72b5jte8lfnerbx8jcrms7.streamlit.app/](https://miniprojectdw-3pntnkkaea4sgwctctrzi7.streamlit.app/)
+https://miniprojectdw-72b5jte8lfnerbx8jcrms7.streamlit.app/
 
 ---
 
